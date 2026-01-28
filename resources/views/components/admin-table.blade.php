@@ -1,0 +1,120 @@
+@props([
+    'columns' => [],
+    'pagination' => null,
+    'counts' => [],
+    'status' => 'all',
+    'route' => null,
+    'search' => null,
+    'bulkRoute' => null,
+])
+
+<div>
+    {{-- 1. Top Toolbar: Status Tabs --}}
+    @if(!empty($counts))
+        <div class="mb-4">
+            <div class="flex flex-wrap gap-2 text-sm text-gray-600">
+                @foreach($counts as $key => $count)
+                    @php
+                        if ($key !== 'all' && $count === 0) continue;
+
+                        $label = match($key) {
+                            'all' => 'All',
+                            'publish' => 'Published',
+                            'draft' => 'Draft',
+                            'trash' => 'Trash',
+                            'private' => 'Private',
+                            'active' => 'Active',
+                            'inactive' => 'Inactive',
+                            default => ucfirst($key)
+                        };
+                        
+                        $isActive = $status === $key;
+                        $url = $route ? route($route, ['status' => $key, 'type' => request('type')]) : '#';
+                    @endphp
+                    
+                    <a href="{{ $url }}" 
+                       class="{{ $isActive ? 'text-indigo-600 font-bold' : 'hover:text-indigo-600' }}">
+                       {{ $label }} <span class="text-gray-400">({{ $count }})</span>
+                    </a>
+                    @if(!$loop->last) <span class="text-gray-300">|</span> @endif
+                @endforeach
+            </div>
+        </div>
+    @endif
+
+    {{-- 2. Bulk Actions Wrapper & Table --}}
+    @php
+        $WrapperTag = $bulkRoute ? 'form' : 'div';
+        $WrapperAttrs = $bulkRoute ? 'action='.route($bulkRoute).' method=POST id=bulkActionForm' : '';
+    @endphp
+
+    <{{ $WrapperTag }} {!! $WrapperAttrs !!}>
+        @if($bulkRoute) @csrf @endif
+
+        {{-- Toolbar Row: Bulk Actions (Left) + Search (Right) --}}
+        <div class="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            {{-- Left: Bulk Actions --}}
+            <div>
+                @if($bulkRoute)
+                    <div class="flex items-center gap-2">
+                        <select name="action" class="shadow-sm border border-gray-300 rounded-lg py-2 pl-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white" required>
+                            <option value="" disabled selected>Bulk Actions</option>
+                            @if($status === 'trash')
+                                <option value="restore">Restore</option>
+                                <option value="delete">Delete Permanently</option>
+                            @else
+                                <option value="delete">Delete Permanently</option>
+                            @endif
+                        </select>
+                        <button type="submit" class="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-2 px-4 rounded-lg shadow-sm text-sm transition-colors" 
+                                onclick="return confirm('Are you sure you want to apply this action to selected items?');">
+                            Apply
+                        </button>
+                    </div>
+                @endif
+            </div>
+
+            {{-- Right: Search Box --}}
+            <div>
+                @if($route)
+                    <form action="{{ route($route) }}" method="GET" class="flex items-center">
+                        <input type="hidden" name="type" value="{{ request('type') }}">
+                        @if($status && $status !== 'all') <input type="hidden" name="status" value="{{ $status }}"> @endif
+                        
+                        <input type="text" name="s" value="{{ $search ?? '' }}" placeholder="Search..." 
+                            class="shadow-sm border border-gray-300 rounded-l-lg py-2 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-48 transition-all focus:w-64">
+                        <button type="submit" class="bg-gray-100 border border-l-0 border-gray-300 py-2 px-4 rounded-r-lg hover:bg-gray-200 text-sm font-medium">Search</button>
+                    </form>
+                @endif
+            </div>
+        </div>
+
+        {{-- The Table Card --}}
+        <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+            @if($pagination)
+                <div class="px-5 py-3 border-b border-gray-200">
+                    {{ $pagination->links() }}
+                </div>
+            @endif
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full leading-normal">
+                    <thead>
+                        <tr>
+                            {{ $header ?? '' }}
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        {{ $slot }}
+                    </tbody>
+                </table>
+            </div>
+
+            @if($pagination)
+                <div class="px-5 py-3 border-t border-gray-200">
+                    {{ $pagination->links() }}
+                </div>
+            @endif
+        </div>
+    </{{ $WrapperTag }}>
+</div>

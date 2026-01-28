@@ -1,0 +1,41 @@
+/* Custom Admin CSS - Only loaded for logged-in users */
+
+/* Fix for Admin Bar Layout */
+#wp-admin-bar {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Ensure the Template Name indicator stays aligned and doesn't break layout */
+#wp-admin-bar .template-indicator {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    margin-right: 15px;
+    padding-right: 15px;
+    border-right: 1px solid #3c434a;
+    font-size: 11px;
+    color: #8c8f94;
+    white-space: nowrap;
+}
+
+#wp-admin-bar .template-indicator span.dashicons {
+    margin-right: 5px;
+}
+
+/* Add any other admin-specific frontend overrides here */
+body.admin-bar {
+    /* Ensures content is pushed down, if standard method fails */
+    margin-top: 32px;
+}
+
+@media screen and (max-width: 782px) {
+    body.admin-bar {
+        margin-top: 46px;
+        /* WordPress responsive behavior */
+    }
+
+    #wp-admin-bar {
+        position: fixed;
+        /* Keep it fixed on mobile too if desired */
+    }
+}
