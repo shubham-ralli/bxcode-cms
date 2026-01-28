@@ -111,7 +111,7 @@
 
                     <td class="px-5 py-4 text-sm whitespace-nowrap text-right">
                         @if($post->status !== 'trash')
-                            <a href="{{ route('admin.posts.edit', $post->id) }}" class="text-indigo-600 hover:text-indigo-900 font-medium mr-3">Edit</a>
+                            <a href="{{ route('admin.posts.edit', ['post' => $post->id, 'action' => 'edit']) }}" class="text-indigo-600 hover:text-indigo-900 font-medium mr-3">Edit</a>
                             
                             @if($post->status == 'publish' || $post->status == 'private')
                             <a href="{{ $post->url }}" target="_blank" class="text-green-600 hover:text-green-900 font-medium mr-3">View</a>

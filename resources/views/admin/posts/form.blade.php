@@ -134,7 +134,7 @@
                 <div class="bg-white rounded-lg shadow-sm p-6">
                     <h3 class="text-sm font-semibold text-gray-700 mb-2">Excerpt</h3>
                     <textarea name="excerpt" rows="3"
-                        class="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                        class="w-full bg-gray-50 p-3 border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                         placeholder="Write a short summary...">{{ old('excerpt', $post->excerpt) }}</textarea>
                 </div>
 

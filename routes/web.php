@@ -33,7 +33,7 @@ Route::prefix('lp-admin')->group(function () {
         Route::get('/posts/create', [App\Http\Controllers\PostController::class, 'create'])->name('admin.posts.create');
         Route::post('/posts', [App\Http\Controllers\PostController::class, 'store'])->name('admin.posts.store');
         Route::post('/posts/bulk', [App\Http\Controllers\PostController::class, 'bulkAction'])->name('admin.posts.bulk');
-        Route::get('/posts/{id}/edit', [App\Http\Controllers\PostController::class, 'edit'])->name('admin.posts.edit');
+        Route::get('/posts/edit', [App\Http\Controllers\PostController::class, 'edit'])->name('admin.posts.edit');
         Route::post('/posts/{id}/restore', [App\Http\Controllers\PostController::class, 'restore'])->name('admin.posts.restore');
         Route::put('/posts/{id}', [App\Http\Controllers\PostController::class, 'update'])->name('admin.posts.update');
         Route::delete('/posts/{id}', [App\Http\Controllers\PostController::class, 'destroy'])->name('admin.posts.destroy');

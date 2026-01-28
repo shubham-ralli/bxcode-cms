@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
 @section('title', 'Edit ' . ucfirst($post->type))
-@section('main_padding', 'p-0 mt-8')
+@section('main_padding', 'p-0')
 @section('header', '')
 
 @section('content')

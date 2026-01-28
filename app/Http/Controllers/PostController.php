@@ -139,11 +139,12 @@ class PostController extends Controller
         // Trigger Save Post Hook (for Plugins like ACF)
         do_action('save_post', $post->id, $request);
 
-        return redirect()->route('admin.posts.index', ['type' => $request->type])->with('success', 'Post created successfully');
+        return redirect()->route('admin.posts.edit', ['post' => $post->id, 'action' => 'edit'])->with('success', 'Post created successfully');
     }
 
-    public function edit($id)
+    public function edit(Request $request)
     {
+        $id = $request->query('post');
         $post = Post::with(['seo', 'author', 'tags', 'categories'])->findOrFail($id);
 
         $parents = [];
