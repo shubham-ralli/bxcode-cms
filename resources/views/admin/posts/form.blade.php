@@ -177,7 +177,7 @@
                                 @endphp
                                 <input type="text" id="authorSearch" placeholder="Search author..."
                                     value="{{ $authorName }}"
-                                    class="w-full text-sm border-none bg-gray-50 rounded focus:ring-0 font-medium text-gray-700 cursor-pointer"
+                                    class="w-full text-right text-sm border-none bg-gray-50 rounded focus:ring-0 font-medium text-gray-700 cursor-pointer"
                                     onclick="document.getElementById('authorDropdown').classList.remove('hidden')"
                                     onkeyup="filterAuthors()" autocomplete="off">
                                 <input type="hidden" name="author_id" id="authorId" value="{{ $authorId }}">
