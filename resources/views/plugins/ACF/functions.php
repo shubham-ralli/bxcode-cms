@@ -5,12 +5,67 @@ if (!plugin_is_active('ACF')) {
 }
 
 add_admin_menu(
-    'Custom Fields',
+    'ACF',
     'acf',
     url('lp-admin/acf'),
-    '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>',
-    80
+    '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 0 01.707.293l5.414 5.414a1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>',
+    100
 );
+
+// Add submenus
+add_admin_submenu('acf', 'Field Groups', url('lp-admin/acf/field-groups'), 10);
+add_admin_submenu('acf', 'Post Types', url('lp-admin/acf/post-types'), 20);
+
+// Register Custom Post Types in Admin Menu
+try {
+    // Check if table exists to avoid migration errors on fresh install
+    if (\Illuminate\Support\Facades\Schema::hasTable('custom_post_types')) {
+        $customTypes = \Illuminate\Support\Facades\DB::table('custom_post_types')
+            ->where('active', 1)
+            ->get();
+
+        foreach ($customTypes as $type) {
+            $settings = json_decode($type->settings, true) ?? [];
+
+            // Default show_in_menu to false if not set (since checkbox sends 1 if checked, nothing if not)
+            // But for existing types created before this setting, defaulting to True might be safer?
+            // User says "not working", implying they unchecked it and it still shows.
+            // Unchecked = missing key. 
+            // So default must be false if we want strict checkbox mapping.
+            // However, use '1' string check for safety.
+            if (empty($settings['show_in_menu'])) {
+                continue;
+            }
+            $icon = $settings['menu_icon'] ?? '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>';
+
+            $labels = $validated['labels'] ?? ($settings['labels'] ?? []);
+            // Fallbacks if labels aren't in settings structure (migration support)
+            // But usually they are merged in update/store.
+            // Let's decode labels from the separate column if it exists or use settings.
+            if (isset($type->labels)) {
+                $labels = json_decode($type->labels, true) ?? [];
+            }
+
+            $menuName = $labels['menu_name'] ?? ($type->plural_label);
+            $allItems = $labels['all_items'] ?? ("All " . $type->plural_label);
+            $addNew = $labels['add_new'] ?? "Add New";
+
+            add_admin_menu(
+                $menuName,
+                $type->key,
+                url('lp-admin/posts') . '?type=' . $type->key,
+                $icon,
+                25
+            );
+
+            // Add Submenus
+            add_admin_submenu($type->key, $allItems, url('lp-admin/posts') . '?type=' . $type->key, 10);
+            add_admin_submenu($type->key, $addNew, url('lp-admin/posts/create') . '?type=' . $type->key, 20);
+        }
+    }
+} catch (\Exception $e) {
+    // Fail silently
+}
 
 if (!function_exists('get_field')) {
     function get_field($key, $postId = null)
@@ -119,16 +174,27 @@ add_action('save_post', function ($postId, $request) {
 
 // 4. Admin Routes (Seo-Pattern)
 use Plugins\ACF\src\Http\Controllers\ACFController;
+use Plugins\ACF\src\Http\Controllers\PostTypeController;
 
 // Ensure Autoloader knows about our namespace (PluginServiceProvider does this dynamically)
 // But just in case, manual check or let strict class reference trigger it.
 
-add_plugin_admin_route('acf', [ACFController::class, 'index'], 'admin.acf.index');
-add_plugin_admin_route('acf/create', [ACFController::class, 'create'], 'admin.acf.create');
-add_plugin_admin_route('acf', [ACFController::class, 'store'], 'admin.acf.store', ['POST']);
-add_plugin_admin_route('acf/{id}/edit', [ACFController::class, 'edit'], 'admin.acf.edit');
-add_plugin_admin_route('acf/{id}', [ACFController::class, 'update'], 'admin.acf.update', ['PUT']);
-add_plugin_admin_route('acf/{id}', [ACFController::class, 'destroy'], 'admin.acf.destroy', ['DELETE']);
-add_plugin_admin_route('acf/action/bulk', [ACFController::class, 'bulkDestroy'], 'admin.acf.bulk', ['POST']);
-add_plugin_admin_route('acf/{id}/toggle', [ACFController::class, 'toggleStatus'], 'admin.acf.toggle', ['POST']);
+// Field Groups Routes (acf-field-group)
+add_plugin_admin_route('acf/field-groups', [ACFController::class, 'index'], 'admin.acf.index');
+add_plugin_admin_route('acf/field-groups/create', [ACFController::class, 'create'], 'admin.acf.create');
+add_plugin_admin_route('acf/field-groups', [ACFController::class, 'store'], 'admin.acf.store', ['POST']);
+add_plugin_admin_route('acf/field-groups/{id}/edit', [ACFController::class, 'edit'], 'admin.acf.edit');
+add_plugin_admin_route('acf/field-groups/{id}', [ACFController::class, 'update'], 'admin.acf.update', ['PUT']);
+add_plugin_admin_route('acf/field-groups/{id}', [ACFController::class, 'destroy'], 'admin.acf.destroy', ['DELETE']);
+add_plugin_admin_route('acf/field-groups/action/bulk', [ACFController::class, 'bulkDestroy'], 'admin.acf.bulk', ['POST']);
+add_plugin_admin_route('acf/field-groups/{id}/toggle', [ACFController::class, 'toggleStatus'], 'admin.acf.toggle', ['POST']);
 
+// Post Types Routes (acf-post-type)
+add_plugin_admin_route('acf/post-types', [PostTypeController::class, 'index'], 'admin.post-types.index');
+add_plugin_admin_route('acf/post-types/create', [PostTypeController::class, 'create'], 'admin.post-types.create');
+add_plugin_admin_route('acf/post-types', [PostTypeController::class, 'store'], 'admin.post-types.store', ['POST']);
+add_plugin_admin_route('acf/post-types/{id}/edit', [PostTypeController::class, 'edit'], 'admin.post-types.edit');
+add_plugin_admin_route('acf/post-types/{id}', [PostTypeController::class, 'update'], 'admin.post-types.update', ['PUT']);
+add_plugin_admin_route('acf/post-types/{id}', [PostTypeController::class, 'destroy'], 'admin.post-types.destroy', ['DELETE']);
+add_plugin_admin_route('acf/post-types/action/bulk', [PostTypeController::class, 'bulkDestroy'], 'admin.post-types.bulk', ['POST']);
+add_plugin_admin_route('acf/post-types/{id}/toggle', [PostTypeController::class, 'toggleStatus'], 'admin.post-types.toggle', ['POST']);

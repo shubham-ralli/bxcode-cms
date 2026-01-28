@@ -42,7 +42,13 @@ class PostController extends Controller
             'trash' => (clone $baseQuery)->where('status', 'trash')->count(),
         ];
 
-        return view('admin.posts.index', compact('posts', 'counts', 'type', 'status', 'search'));
+        // Fetch Custom Post Type Object if applicable
+        $postTypeObj = null;
+        if (!in_array($type, ['post', 'page'])) {
+            $postTypeObj = \Illuminate\Support\Facades\DB::table('custom_post_types')->where('key', $type)->first();
+        }
+
+        return view('admin.posts.index', compact('posts', 'counts', 'type', 'status', 'search', 'postTypeObj'));
     }
 
     public function create(Request $request)
@@ -64,7 +70,16 @@ class PostController extends Controller
         // Get Templates
         $templates = $this->getAvailableTemplates();
 
-        return view('admin.posts.create', compact('parents', 'users', 'tags', 'categories', 'templates'));
+        // Fetch CPT Object
+        $postTypeObj = null;
+        if (!in_array($request->type, ['post', 'page'])) {
+            $postTypeObj = \Illuminate\Support\Facades\DB::table('custom_post_types')->where('key', $request->type)->first();
+        }
+
+        $post = new Post(['type' => $request->type ?? 'post']);
+        $action = route('admin.posts.store');
+
+        return view('admin.posts.create', compact('parents', 'users', 'tags', 'categories', 'templates', 'postTypeObj', 'post', 'action'));
     }
 
     /**
@@ -167,7 +182,15 @@ class PostController extends Controller
         // Get Templates
         $templates = $this->getAvailableTemplates();
 
-        return view('admin.posts.edit', compact('post', 'parents', 'users', 'tags', 'categories', 'templates'));
+        // Fetch CPT Object
+        $postTypeObj = null;
+        if (!in_array($post->type, ['post', 'page'])) {
+            $postTypeObj = \Illuminate\Support\Facades\DB::table('custom_post_types')->where('key', $post->type)->first();
+        }
+
+        $action = route('admin.posts.update', $post->id);
+
+        return view('admin.posts.edit', compact('post', 'parents', 'users', 'tags', 'categories', 'templates', 'postTypeObj', 'action'));
     }
 
     public function update(Request $request, $id)

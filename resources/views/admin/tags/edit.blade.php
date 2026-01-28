@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('admin.components.admin')
 
 @section('title', 'Edit Tag')
 @section('header', 'Edit Tag')

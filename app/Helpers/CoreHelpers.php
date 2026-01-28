@@ -187,3 +187,17 @@ if (!function_exists('register_liquid_tag')) {
         \App\Services\LiquidService::registerTag($tag, $class);
     }
 }
+
+// Load core meta boxes
+// TEMPORARILY DISABLED - Need to fix variable scope issues
+// require_once __DIR__ . '/core_metaboxes.php';
+
+// Load taxonomy system
+// DISABLED - Causing 500 errors
+// require_once __DIR__ . '/taxonomy_helpers.php';
+
+
+
+
+
+

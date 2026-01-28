@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('admin.components.admin')
 
 @section('title', $group->id ? 'Edit Field Group' : 'Add New Field Group')
 

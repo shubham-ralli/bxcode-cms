@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('admin.components.admin')
 
 @section('title', 'SEO Settings')
 @section('header', 'SEO Settings')

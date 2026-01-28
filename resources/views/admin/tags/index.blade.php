@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('admin.components.admin')
 
 @section('title', ucfirst($taxonomy ?? 'post_tag') === 'Category' ? 'Categories' : 'Tags')
 @section('header', ucfirst($taxonomy ?? 'post_tag') === 'Category' ? 'Categories' : 'Tags')
@@ -47,7 +47,7 @@
         <!-- Right: List Tags -->
         <div class="w-full md:w-2/3">
 
-            <x-admin-table :pagination="$tags" :counts="$counts" :search="$search" route="admin.tags.index"
+            <x-admin::admin-table :pagination="$tags" :counts="$counts" :search="$search" route="admin.tags.index"
                 bulk-route="admin.tags.bulk">
 
                 <x-slot name="header">
@@ -123,7 +123,7 @@
                     </tr>
                 @endforelse
 
-            </x-admin-table>
+            </x-admin::admin-table>
         </div>
     </div>
 

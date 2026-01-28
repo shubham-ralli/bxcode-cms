@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('admin.components.admin')
 
 @section('title', 'Page Not Found')
 @section('header', '404 - Not Found')
@@ -11,10 +11,6 @@
             The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.
         </p>
         <div class="mt-8 flex gap-4">
-            <button onclick="history.back()"
-                class="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition">
-                &larr; Go Back
-            </button>
             <a href="{{ route('admin.dashboard') }}"
                 class="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
                 Dashboard

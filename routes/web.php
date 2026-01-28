@@ -70,7 +70,10 @@ Route::prefix('lp-admin')->group(function () {
 
         // Appearance > Menus
         Route::get('menus', [App\Http\Controllers\MenuController::class, 'index'])->name('admin.menus.index');
+        Route::get('menus/create', [App\Http\Controllers\MenuController::class, 'create'])->name('admin.menus.create');
         Route::post('menus', [App\Http\Controllers\MenuController::class, 'store'])->name('admin.menus.store');
+        Route::get('menus/{id}/edit', [App\Http\Controllers\MenuController::class, 'edit'])->name('admin.menus.edit');
+        Route::put('menus/{id}', [App\Http\Controllers\MenuController::class, 'update'])->name('admin.menus.update');
         Route::delete('menus/{id}', [App\Http\Controllers\MenuController::class, 'destroy'])->name('admin.menus.destroy');
         Route::post('menus/add-item', [App\Http\Controllers\MenuController::class, 'addItem'])->name('admin.menus.addItem');
         Route::post('menus/update-tree', [App\Http\Controllers\MenuController::class, 'updateTree'])->name('admin.menus.updateTree');

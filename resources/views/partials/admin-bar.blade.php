@@ -51,8 +51,20 @@
                         style="display: block; color: #b0b0b0; text-decoration: none; padding: 6px 12px;">Post</a>
                     <a href="{{ route('admin.posts.create', ['type' => 'page']) }}" class="ab-sub-item"
                         style="display: block; color: #b0b0b0; text-decoration: none; padding: 6px 12px;">Page</a>
+
+                    {{-- Active Custom Post Types --}}
+                    @foreach(\Illuminate\Support\Facades\DB::table('custom_post_types')->where('active', 1)->get() as $cpt)
+                        @php $settings = json_decode($cpt->settings, true) ?? []; @endphp
+                        @if(isset($settings['show_in_admin_bar']) && $settings['show_in_admin_bar'])
+                            <a href="{{ route('admin.posts.create', ['type' => $cpt->key]) }}" class="ab-sub-item"
+                                style="display: block; color: #b0b0b0; text-decoration: none; padding: 6px 12px;">
+                                {{ $cpt->singular_label }}
+                            </a>
+                        @endif
+                    @endforeach
+
                     <a href="{{ route('admin.users.create') }}" class="ab-sub-item"
-                        style="display: block; color: #b0b0b0; text-decoration: none; padding: 6px 12px;">User</a>
+                        style="display: block; color: #b0b0b0; text-decoration: none; padding: 6px 12px; border-top: 1px solid #464b50; margin-top:2px;">User</a>
                 </div>
             </div>
 

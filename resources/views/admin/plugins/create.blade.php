@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('admin.components.admin')
 
 @section('title', 'Add New Plugin')
 @section('header', 'Add New Plugin')

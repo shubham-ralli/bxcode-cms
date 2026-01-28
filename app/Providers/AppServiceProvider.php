@@ -27,6 +27,11 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Register Admin Components path
+        \Illuminate\Support\Facades\Blade::anonymousComponentPath(resource_path('views/admin/components'), 'admin');
+
+        \Illuminate\Pagination\Paginator::useTailwind();
+
         // Force Root URL if configured (Fixes "public" appearing in URLs)
         if (!empty(config('app.url')) && config('app.url') !== 'http://localhost') {
             \Illuminate\Support\Facades\URL::forceRootUrl(config('app.url'));

@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('admin.components.admin')
 
 @section('title', 'Edit ' . ucfirst($post->type))
 @section('main_padding', 'p-0')
@@ -7,7 +7,8 @@
 @section('content')
     @include('admin.posts.form', [
         'post' => $post,
-        'action' => route('admin.posts.update', $post->id)
+        'action' => $action,
+        'postTypeObj' => $postTypeObj ?? null
     ])
 
         <!-- Trash Form (Separate from main form) -->

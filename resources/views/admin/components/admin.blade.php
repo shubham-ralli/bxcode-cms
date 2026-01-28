@@ -17,9 +17,15 @@
     @endif
 
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"
+        integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.2/tinymce.min.js" referrerpolicy="origin"></script>
+
+    <!-- Custom Admin Styles -->
+    <!-- Custom Admin Styles -->
+    <link rel="stylesheet" href="{{ url('public/css/admin-custom.css') }}">
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -574,6 +580,7 @@
                     </li>
 
                     <!-- Dynamic Plugin Menus -->
+                    <!-- DEBUG MENUS: {{ json_encode(\App\Services\AdminMenuService::get()) }} -->
                     @foreach(\App\Services\AdminMenuService::get() as $key => $item)
                         @if(!empty($item['children']))
                             {{-- Menu with Children (like Users menu) --}}

@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('admin.components.admin')
 
 @section('title', 'Add New ' . ucfirst(request('type', 'Post')))
 @section('main_padding', 'p-0')
@@ -6,7 +6,8 @@
 
 @section('content')
     @include('admin.posts.form', [
-        'post' => new \App\Models\Post(['type' => request('type', 'post')]),
-        'action' => route('admin.posts.store')
+        'post' => $post,
+        'action' => $action,
+        'postTypeObj' => $postTypeObj ?? null
     ])
 @endsection

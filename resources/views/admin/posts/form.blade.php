@@ -10,6 +10,36 @@
     @endif
     <input type="hidden" name="type" value="{{ $post->type }}">
 
+    @php
+        $isEdit = $post->exists;
+        $typeInfo = request('type', $post->type ?? 'post');
+        
+        $title = $isEdit ? 'Edit Post' : 'Add New Post';
+        
+        if ($typeInfo === 'page') {
+            $title = $isEdit ? 'Edit Page' : 'Add New Page';
+        } elseif(isset($postTypeObj) && $postTypeObj) {
+            $labels = json_decode($postTypeObj->labels, true) ?? [];
+            if ($isEdit) {
+                $title = $labels['edit_item'] ?? ('Edit ' . $postTypeObj->singular_label);
+            } else {
+                $title = $labels['add_new_item'] ?? ('Add New ' . $postTypeObj->singular_label);
+            }
+        }
+        
+        // Determine Supports
+        $defaultSupports = ['title', 'editor', 'featured_image', 'excerpt', 'author', 'categories', 'tags'];
+        if (isset($postTypeObj) && $postTypeObj) {
+            $enabledSupports = json_decode($postTypeObj->supports, true) ?? [];
+        } else {
+            // Standard Post/Page defaults
+            $enabledSupports = $defaultSupports;
+            if ($typeInfo === 'page') {
+                $enabledSupports = ['title', 'editor', 'featured_image', 'author', 'page-attributes']; // Pages usually don't have excerpt/tags/categories by default in WP, but strict parity optional
+            }
+        }
+    @endphp
+
     <!-- Top Header: Title & Actions -->
     <header class="bg-white border-b border-gray-200 sticky top-0 z-30">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -81,13 +111,72 @@
             <main class="lg:col-span-9 space-y-6">
 
                 <!-- Title Input -->
+                @if(supports_meta_box($post->type, 'title'))
                 <div class="bg-white rounded-lg shadow-sm p-6">
                     <input type="text" name="title" value="{{ old('title', $post->title) }}" placeholder="Enter title here"
                         class="w-full bg-gray-50 p-3 text-3xl font-bold border-none focus:ring-0 placeholder-gray-300 text-gray-900"
                         required @if(!$post->exists) onkeyup="generateSlug(this.value)" @endif>
+                </div>
+                @else
+                    <input type="hidden" name="title" value="{{ $post->title ?? 'Untitled ' . now()->toDateTimeString() }}">
+                @endif
+
+                <!-- Editor -->
+                @if(supports_meta_box($post->type, 'editor'))
+                <div class="h-[600px] mb-8 content-editor" id="content-editor">
+                    @include('admin.partials.editor', ['name' => 'content', 'value' => old('content', $post->content), 'height' => '100%'])
+                </div>
+                @endif
+
+                <!-- Excerpt (Optional) -->
+                @if(supports_meta_box($post->type, 'excerpt'))
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <h3 class="text-sm font-semibold text-gray-700 mb-2">Excerpt</h3>
+                    <textarea name="excerpt" rows="3"
+                        class="w-full bg-gray-50 p-3 border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                        placeholder="Write a short summary...">{{ old('excerpt', $post->excerpt) }}</textarea>
+                </div>
+                @endif
+
+                <!-- Plugin Hook -->
+                @php 
+                    do_action('admin_post_add', $post->exists ? $post : null); 
+                @endphp
+
+                <!-- Plugin Meta Boxes (Main Column) -->
+                @php
+                    render_meta_boxes($post->type, 'main', $post);
+                @endphp
+
+            </main>
+
+            <!-- Right Column: Sidebar (4 cols) -->
+            <aside id="sidebar-container" class="lg:col-span-3 space-y-6 hidden lg:block">
+
+                <!-- Publish Card -->
+                <div class="bg-white rounded-lg shadow-sm" x-data="{ open: true }">
+                    <div class="px-4 py-3 border-b border-gray-100 flex justify-between items-center cursor-pointer" @click="open = !open">
+                        <h3 class="font-semibold text-gray-700">Publish</h3>
+                        <button type="button" class="text-gray-400 hover:text-gray-600 transition-transform" :class="{ 'rotate-180': !open }">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div x-show="open" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 transform scale-95" x-transition:enter-end="opacity-100 transform scale-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 transform scale-100" x-transition:leave-end="opacity-0 transform scale-95" class="p-4 space-y-4">
+                        <div class="flex items-center justify-between text-sm">
+                            <label class="text-gray-600">Status:</label>
+                            <select name="status"
+                                class="text-sm border-none bg-gray-50 rounded focus:ring-0 font-medium text-gray-700 cursor-pointer">
+                                <option value="publish" {{ old('status', $post->status) == 'publish' ? 'selected' : '' }}>Public</option>
+                                <option value="private" {{ old('status', $post->status) == 'private' ? 'selected' : '' }}>Private</option>
+                                <option value="draft" {{ old('status', $post->status) == 'draft' ? 'selected' : '' }}>Draft</option>
+                            </select>
+                        </div>
 
 
-                    <div class="mt-4 border-t pt-4" x-data="{
+
+<div class="flex items-center justify-between text-sm" x-data="{
                             slug: '{{ old('slug', $post->slug) }}',
                             init() {
                                 this.$nextTick(() => {
@@ -112,57 +201,14 @@
                                 });
                             }
                         }">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Permalink</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Slug</label>
                         <div class="flex rounded-md shadow-sm">
-                            <span
-                                class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
-                                {{ url('/') }}/
-                            </span>
                             <input type="text" name="slug" id="slugInput" x-model="slug"
                                 class="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-r-md border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                 placeholder="url-slug">
                         </div>
                     </div>
-                </div>
 
-                <!-- Editor -->
-                <div class="h-[600px] mb-8">
-                    @include('admin.partials.editor', ['name' => 'content', 'value' => old('content', $post->content), 'height' => '100%'])
-                </div>
-
-                <!-- Excerpt (Optional) -->
-                <div class="bg-white rounded-lg shadow-sm p-6">
-                    <h3 class="text-sm font-semibold text-gray-700 mb-2">Excerpt</h3>
-                    <textarea name="excerpt" rows="3"
-                        class="w-full bg-gray-50 p-3 border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                        placeholder="Write a short summary...">{{ old('excerpt', $post->excerpt) }}</textarea>
-                </div>
-
-                <!-- Plugin Hook -->
-                @php 
-                    do_action('admin_post_add', $post->exists ? $post : null); 
-                @endphp
-
-            </main>
-
-            <!-- Right Column: Sidebar (4 cols) -->
-            <aside id="sidebar-container" class="lg:col-span-3 space-y-6 hidden lg:block">
-
-                <!-- Publish Card -->
-                <div class="bg-white rounded-lg shadow-sm">
-                    <div class="px-4 py-3 border-b border-gray-100 flex justify-between items-center">
-                        <h3 class="font-semibold text-gray-700">Publish</h3>
-                    </div>
-                    <div class="p-4 space-y-4">
-                        <div class="flex items-center justify-between text-sm">
-                            <label class="text-gray-600">Status:</label>
-                            <select name="status"
-                                class="text-sm border-none bg-gray-50 rounded focus:ring-0 font-medium text-gray-700 cursor-pointer">
-                                <option value="publish" {{ old('status', $post->status) == 'publish' ? 'selected' : '' }}>Public</option>
-                                <option value="private" {{ old('status', $post->status) == 'private' ? 'selected' : '' }}>Private</option>
-                                <option value="draft" {{ old('status', $post->status) == 'draft' ? 'selected' : '' }}>Draft</option>
-                            </select>
-                        </div>
                         <div class="flex items-center justify-between text-sm">
                             <label class="text-gray-600">Author:</label>
                             <div class="relative min-w-[150px]" id="authorSelectContainer">
@@ -268,13 +314,14 @@
                 </div>
 
                 <!-- Categories Card (Checkboxes with AJAX Add) -->
-                @if($post->type == 'post')
+                @if(supports_meta_box($post->type, 'categories'))
                     <div class="bg-white rounded-lg shadow-sm mb-6" x-data="{
                                     categories: {{ $categories }},
                                     selected: {{ $post->exists ? $post->categories->pluck('id') : '[]' }},
                                     showAdd: false,
                                     newCatName: '',
                                     parent: null,
+                                    open: true,
                                     async addCategory() {
                                         if (!this.newCatName.trim()) return;
 
@@ -305,10 +352,15 @@
                                         }
                                     }
                                 }">
-                        <div class="px-4 py-3 border-b border-gray-100 flex justify-between items-center">
+                        <div class="px-4 py-3 border-b border-gray-100 flex justify-between items-center cursor-pointer" @click="open = !open">
                             <h3 class="font-semibold text-gray-700">Categories</h3>
+                            <button type="button" class="text-gray-400 hover:text-gray-600 transition-transform" :class="{ 'rotate-180': !open }">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
                         </div>
-                        <div class="p-4">
+                        <div x-show="open" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 transform scale-95" x-transition:enter-end="opacity-100 transform scale-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 transform scale-100" x-transition:leave-end="opacity-0 transform scale-95" class="p-4">
                             <!-- List -->
                             <div
                                 class="max-h-60 overflow-y-auto border border-gray-100 rounded p-2 bg-gray-50 mb-3 space-y-2">
@@ -347,12 +399,13 @@
                 @endif
 
                 <!-- Tags Card -->
-                @if($post->type == 'post')
+                @if(supports_meta_box($post->type, 'tags'))
                     <div class="bg-white rounded-lg shadow-sm" x-data="{
                                                 tags: {{ $post->exists ? $post->tags->pluck('name') : '[]' }},
                                                 newTag: '',
                                                 availableTags: {{ $tags->pluck('name') }},
                                                 filteredTags: [],
+                                                open: true,
                                                 init() {
                                                     this.$watch('newTag', (val) => {
                                                         if (val.length < 1) {
@@ -384,10 +437,15 @@
                                                     }
                                                 }
                                             }">
-                        <div class="px-4 py-3 border-b border-gray-100">
+                        <div class="px-4 py-3 border-b border-gray-100 cursor-pointer flex justify-between items-center" @click="open = !open">
                             <h3 class="font-semibold text-gray-700">Tags</h3>
+                            <button type="button" class="text-gray-400 hover:text-gray-600 transition-transform" :class="{ 'rotate-180': !open }">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
                         </div>
-                        <div class="p-4">
+                        <div x-show="open" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 transform scale-95" x-transition:enter-end="opacity-100 transform scale-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 transform scale-100" x-transition:leave-end="opacity-0 transform scale-95" class="p-4">
                             <!-- Selected Tags -->
                             <div class="flex flex-wrap gap-2 mb-3">
                                 <template x-for="(tag, index) in tags" :key="index">
@@ -432,12 +490,17 @@
                 @endif
 
                 <!-- Page Attributes (If Page) -->
-                @if($post->type == 'page')
-                    <div class="bg-white rounded-lg shadow-sm">
-                        <div class="px-4 py-3 border-b border-gray-100">
+                @if(supports_meta_box($post->type, 'page_attributes'))
+                    <div class="bg-white rounded-lg shadow-sm" x-data="{ open: true }">
+                        <div class="px-4 py-3 border-b border-gray-100 cursor-pointer flex justify-between items-center" @click="open = !open">
                             <h3 class="font-semibold text-gray-700">Page Attributes</h3>
+                            <button type="button" class="text-gray-400 hover:text-gray-600 transition-transform" :class="{ 'rotate-180': !open }">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
                         </div>
-                        <div class="p-4 space-y-4">
+                        <div x-show="open" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 transform scale-95" x-transition:enter-end="opacity-100 transform scale-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 transform scale-100" x-transition:leave-end="opacity-0 transform scale-95" class="p-4 space-y-4">
                                 <label class="block text-sm text-gray-600 mb-1">Parent Page</label>
                                 <div class="relative" id="parentSelectContainer">
                                     <input type="text" id="parentSearch" placeholder="Search parent..."
@@ -482,11 +545,17 @@
                 @endif
 
                 <!-- Featured Image Card -->
-                <div class="bg-white rounded-lg shadow-sm">
-                    <div class="px-4 py-3 border-b border-gray-100">
+                @if(supports_meta_box($post->type, 'featured_image'))
+                <div class="bg-white rounded-lg shadow-sm" x-data="{ open: true }">
+                    <div class="px-4 py-3 border-b border-gray-100 cursor-pointer flex justify-between items-center" @click="open = !open">
                         <h3 class="font-semibold text-gray-700">Featured Image</h3>
+                        <button type="button" class="text-gray-400 hover:text-gray-600 transition-transform" :class="{ 'rotate-180': !open }">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
                     </div>
-                    <div class="p-4">
+                    <div x-show="open" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 transform scale-95" x-transition:enter-end="opacity-100 transform scale-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 transform scale-100" x-transition:leave-end="opacity-0 transform scale-95" class="p-4">
                         <div
                             class="bg-gray-50 border-2 border-dashed border-gray-200 rounded-lg p-2 text-center hover:border-indigo-300 transition-colors cursor-pointer relative group min-h-[150px] flex items-center justify-center overflow-hidden">
 
@@ -520,6 +589,12 @@
                             value="{{ $post->featured_image }}">
                     </div>
                 </div>
+                @endif
+
+                <!-- Plugin Meta Boxes (Sidebar) -->
+                @php
+                    render_meta_boxes($post->type, 'side', $post);
+                @endphp
 
             </aside>
         </div>

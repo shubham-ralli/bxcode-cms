@@ -32,7 +32,12 @@ class Post extends Model
             return url(implode('/', $segments));
         }
 
-        // For Posts
+        // For Custom Post Types (not post, page, attachment)
+        if (!in_array($this->type, ['post', 'page', 'attachment', 'revision', 'nav_menu_item'])) {
+            return url($this->type . '/' . $this->slug);
+        }
+
+        // For Standard Posts
         $structure = Setting::get('permalink_structure', '/%postname%/');
 
         // Plain structure

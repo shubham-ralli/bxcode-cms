@@ -203,6 +203,36 @@ class FrontendController extends Controller
             return $this->renderPost($post);
         }
 
+        // 4. Try Custom Post Types (e.g. /movie/title)
+        if (count($segments) >= 2) {
+            $possibleType = $segments[0];
+            // If we have intermediate segments (hierarchy), use end logic, but usually CPTs are flat /type/slug
+            $possibleSlug = end($segments);
+
+            // Check if this type exists and has this post
+            // We allow any type name here, effectively dynamic routing
+            $cptPost = Post::where('type', $possibleType)
+                ->where('slug', $possibleSlug)
+                ->whereIn('status', ['publish', 'private'])
+                ->first();
+
+            if ($cptPost) {
+                // Check if CPT is publicly queryable
+                $cptType = DB::table('custom_post_types')->where('key', $possibleType)->first();
+                if ($cptType) {
+                    $settings = json_decode($cptType->settings, true) ?? [];
+                    if (empty($settings['publicly_queryable'])) {
+                        abort(404);
+                    }
+                }
+
+                if ($cptPost->status === 'private' && !Auth::check())
+                    abort(404);
+                View::share('post', $cptPost);
+                return $this->renderPost($cptPost);
+            }
+        }
+
         abort(404);
     }
 
