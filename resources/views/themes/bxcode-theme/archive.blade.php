@@ -3,7 +3,7 @@
 <header class="bg-white shadow py-6">
     <div class="container mx-auto px-4">
         <h1 class="text-3xl font-bold text-gray-900">
-            {{ \App\Models\Setting::get('site_title', 'BxCode CMS') }}
+            {{ $archiveTitle ?? \App\Models\Setting::get('site_title') }}
             <span
                 class="block text-sm font-normal text-gray-500 mt-1">{{ \App\Models\Setting::get('tagline', '') }}</span>
         </h1>
@@ -35,10 +35,16 @@
             </article>
         @empty
             <div class="col-span-full text-center py-12">
-                <p class="text-gray-500 text-lg">No posts found.</p>
+                <p class="text-gray-500 text-lg">No posts found in this archive.</p>
             </div>
         @endforelse
     </div>
+
+    @if($posts instanceof \Illuminate\Pagination\LengthAwarePaginator)
+        <div class="mt-8">
+            {{ $posts->links() }}
+        </div>
+    @endif
 </main>
 
 {!! get_footer() !!}

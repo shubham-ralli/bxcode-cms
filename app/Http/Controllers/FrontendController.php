@@ -9,6 +9,7 @@ use App\Models\Setting;
 use Liquid\Template;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\DB;
 use App\Models\Tag;
 
 class FrontendController extends Controller
@@ -30,12 +31,15 @@ class FrontendController extends Controller
 
         $theme = get_active_theme();
 
-        // Try specific tag view first, then generic blog/index
+        // Try specific tag view first, then archive, then generic blog/index
         $view = "themes.{$theme}.tag";
         if (!view()->exists($view)) {
-            $view = "themes.{$theme}.blog";
+            $view = "themes.{$theme}.archive";
             if (!view()->exists($view)) {
-                $view = "themes.{$theme}.index";
+                $view = "themes.{$theme}.blog";
+                if (!view()->exists($view)) {
+                    $view = "themes.{$theme}.index";
+                }
             }
         }
 
@@ -120,6 +124,62 @@ class FrontendController extends Controller
             $remaining = substr($slug, strlen($catBase) + 1);
             if (!str_contains($remaining, '/')) {
                 return $this->tag($remaining);
+            }
+        }
+
+        // 2.5 Author Archive
+        if (str_starts_with($slug, 'author/')) {
+            $username = substr($slug, 7);
+            // Try to find user by name (slug-like assumption) or ID if numeric
+            $user = \App\Models\User::where('name', $username)->first();
+            // If stricter checking needed, add username column to users table
+
+            if ($user) {
+                // Determine posts
+                $posts = Post::with('seo')
+                    ->where('author_id', $user->id)
+                    ->where('type', 'post') // Or any type? Usually authors are for posts.
+                    ->where('status', 'publish')
+                    ->orderBy('created_at', 'desc')
+                    ->paginate(10);
+
+                return $this->renderArchive($posts, 'Author: ' . $user->name);
+            }
+        }
+
+        // 2.6 Date Archive (YYYY or YYYY/MM)
+        // Regex: 4 digits, optional / 2 digits
+        if (preg_match('/^(\d{4})(\/(\d{2}))?$/', $slug, $matches)) {
+            $year = $matches[1];
+            $month = $matches[3] ?? null;
+
+            $query = Post::with('seo')
+                ->where('type', 'post')
+                ->where('status', 'publish')
+                ->whereYear('created_at', $year);
+
+            if ($month) {
+                $query->whereMonth('created_at', $month);
+            }
+
+            $posts = $query->orderBy('created_at', 'desc')->paginate(10);
+            $title = $month ? "Date: $year / $month" : "Date: $year";
+            return $this->renderArchive($posts, $title);
+        }
+
+        // 2.7 Custom Post Types (Root Archive) e.g. /products/
+        // Only if it doesn't contain further slashes
+        if (!str_contains($slug, '/')) {
+            $cpt = DB::table('custom_post_types')->where('key', $slug)->first();
+            if ($cpt) {
+                // Check if archive enabled? Assuming yes if public.
+                $posts = Post::with('seo')
+                    ->where('type', $slug)
+                    ->whereIn('status', ['publish'])
+                    ->orderBy('created_at', 'desc')
+                    ->paginate(10);
+
+                return $this->renderArchive($posts, $cpt->plural_label);
             }
         }
 
@@ -297,5 +357,26 @@ class FrontendController extends Controller
         }
 
         return view('frontend.page', compact('content', 'post'));
+    }
+
+    private function renderArchive($posts, $title)
+    {
+        $theme = get_active_theme();
+
+        $view = "themes.{$theme}.archive";
+        if (!view()->exists($view)) {
+            $view = "themes.{$theme}.blog";
+            if (!view()->exists($view)) {
+                $view = "themes.{$theme}.index";
+            }
+        }
+
+        View::share('currentTemplate', $view);
+        View::share('archiveTitle', $title);
+
+        return view($view, [
+            'posts' => $posts,
+            'archiveTitle' => $title
+        ]);
     }
 }
