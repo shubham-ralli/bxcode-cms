@@ -349,6 +349,26 @@ class FrontendController extends Controller
             $view = "themes.{$theme}.post";
         } elseif ($post->type === 'page') {
             $view = "themes.{$theme}.page";
+        } else {
+            // Unify CPT Logic
+            // 1. Check for specific CPT template: themes.{theme}.{type}
+            $cptView = "themes.{$theme}.{$post->type}";
+            if (view()->exists($cptView)) {
+                $view = $cptView;
+            } else {
+                // 2. Fallback based on CPT capability_type
+                $cpt = DB::table('custom_post_types')->where('key', $post->type)->first();
+                if ($cpt) {
+                    $settings = json_decode($cpt->settings, true) ?? [];
+                    $capability = $settings['capability_type'] ?? 'page';
+
+                    if ($capability === 'post') {
+                        $view = "themes.{$theme}.post";
+                    } else {
+                        $view = "themes.{$theme}.page";
+                    }
+                }
+            }
         }
 
         if (view()->exists($view)) {
