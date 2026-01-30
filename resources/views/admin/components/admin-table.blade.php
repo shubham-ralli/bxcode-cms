@@ -29,7 +29,8 @@
                         };
                         
                         $isActive = $status === $key;
-                        $url = $route ? route($route, ['status' => $key, 'type' => request('type')]) : '#';
+                        $filterParam = $attributes->get('filter-param', 'status');
+                        $url = $route ? route($route, array_merge(request()->query(), [$filterParam => $key, 'page' => null])) : '#';
                     @endphp
                     
                     <a href="{{ $url }}" 
@@ -98,7 +99,7 @@
                 @if($route)
                     <form action="{{ route($route) }}" method="GET" class="flex items-center">
                         <input type="hidden" name="type" value="{{ request('type') }}">
-                        @if($status && $status !== 'all') <input type="hidden" name="status" value="{{ $status }}"> @endif
+                        @if($status && $status !== 'all') <input type="hidden" name="{{ $attributes->get('filter-param', 'status') }}" value="{{ $status }}"> @endif
                         
                         <input type="text" name="s" value="{{ $search ?? '' }}" placeholder="Search..." 
                             class="shadow-sm border border-gray-300 rounded-l-lg py-2 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-48 transition-all focus:w-64">

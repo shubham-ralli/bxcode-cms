@@ -40,7 +40,30 @@ class UserController extends Controller
 
         $users = $query->latest()->paginate(20)->withQueryString();
 
-        return view('admin.users.index', compact('users', 'counts'));
+        $status = $request->get('role', 'all');
+
+        return view('admin.users.index', compact('users', 'counts', 'status'));
+    }
+
+    public function bulkAction(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'action' => 'required|in:delete',
+        ]);
+
+        if ($request->input('action') === 'delete') {
+            $ids = $request->input('ids');
+            // Prevent deleting self
+            if (in_array(auth()->id(), $ids)) {
+                return back()->with('error', 'You cannot delete yourself.');
+            }
+
+            User::destroy($ids);
+            return back()->with('success', 'Selected users deleted.');
+        }
+
+        return back()->with('error', 'Invalid action.');
     }
 
     public function create()

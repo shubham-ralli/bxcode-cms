@@ -56,6 +56,7 @@ Route::prefix('lp-admin')->group(function () {
         Route::post('/themes/activate', [App\Http\Controllers\ThemeController::class, 'activate'])->name('admin.themes.activate');
 
         // User Management Routes
+        Route::post('users/bulk', [App\Http\Controllers\UserController::class, 'bulkAction'])->name('admin.users.bulk');
         Route::resource('users', App\Http\Controllers\UserController::class, ['as' => 'admin']);
         Route::get('/profile', [App\Http\Controllers\ProfileController::class, 'edit'])->name('admin.profile.edit');
         Route::put('/profile', [App\Http\Controllers\ProfileController::class, 'update'])->name('admin.profile.update');
