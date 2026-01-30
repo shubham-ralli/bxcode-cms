@@ -978,7 +978,7 @@
                                 image_title: true,
                                 promotion: false,
                                 plugins: 'preview importcss searchreplace autolink autosave save directionality code visualblocks visualchars fullscreen image link media template codesample table charmap pagebreak nonbreaking anchor insertdatetime advlist lists wordcount help charmap quickbars emoticons',
-                                toolbar: 'blocks | bold italic underline strikethrough | alignleft aligncenter alignright | outdent indent |  numlist bullist | insertfile image media link',
+                                toolbar: 'blocks | bold italic underline strikethrough | alignleft aligncenter alignright |  numlist bullist | insertfile image media link',
                                 content_style: 'body { font-family:Inter,Helvetica,Arial,sans-serif; font-size:16px; line-height:1.6; color: #374151; max-width: 800px; margin: 0 auto; padding: 20px; } img { max-width: 100%; height: auto; }',
                                 setup: function (editor) {
                                     self.editor = editor;

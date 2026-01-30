@@ -151,7 +151,16 @@ class PostController extends Controller
         ]);
 
         $this->syncTagsByName($post, $request->input('tags', []), 'post_tag');
-        $this->syncTaxonomyIds($post, $request->input('categories', []), 'category');
+
+        // Handle Categories (Default to first if empty)
+        $categories = $request->input('categories', []);
+        if (empty($categories)) {
+            $defaultCategory = \App\Models\Tag::where('taxonomy', 'category')->orderBy('id')->first();
+            if ($defaultCategory) {
+                $categories[] = $defaultCategory->id;
+            }
+        }
+        $this->syncTaxonomyIds($post, $categories, 'category');
 
         // Save SEO Meta
         if ($request->has('seo')) {
@@ -237,7 +246,16 @@ class PostController extends Controller
         ]);
 
         $this->syncTagsByName($post, $request->input('tags', []), 'post_tag');
-        $this->syncTaxonomyIds($post, $request->input('categories', []), 'category');
+
+        // Handle Categories (Default to first if empty)
+        $categories = $request->input('categories', []);
+        if (empty($categories)) {
+            $defaultCategory = \App\Models\Tag::where('taxonomy', 'category')->orderBy('id')->first();
+            if ($defaultCategory) {
+                $categories[] = $defaultCategory->id;
+            }
+        }
+        $this->syncTaxonomyIds($post, $categories, 'category');
 
         // Update or Create SEO Meta
         if ($request->has('seo')) {
