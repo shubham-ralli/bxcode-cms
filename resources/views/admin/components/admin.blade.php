@@ -875,7 +875,7 @@
                                 statusbar: false,
                                 promotion: false,
                                 plugins: 'preview importcss searchreplace autolink autosave save directionality code visualblocks visualchars fullscreen image link media template codesample table charmap pagebreak nonbreaking anchor insertdatetime advlist lists wordcount help charmap quickbars emoticons',
-                                toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | outdent indent |  numlist bullist | forecolor backcolor removeformat | pagebreak | charmap emoticons | fullscreen  preview save print | insertfile image media template link anchor codesample | ltr rtl',
+                                toolbar: 'blocks | bold italic underline strikethrough | alignleft aligncenter alignright | outdent indent |  numlist bullist | insertfile image media link',
                                 content_style: 'body { font-family:Inter,Helvetica,Arial,sans-serif; font-size:16px; line-height:1.6; color: #374151; max-width: 800px; margin: 0 auto; padding: 20px; } img { max-width: 100%; height: auto; }',
                                 setup: function (editor) {
                                     self.editor = editor;
