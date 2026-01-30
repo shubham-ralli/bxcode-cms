@@ -170,11 +170,17 @@ class FrontendController extends Controller
         // 2.7 Custom Post Types (Root Archive) e.g. /products/
         // Only if it doesn't contain further slashes
         if (!str_contains($slug, '/')) {
-            $cpt = DB::table('custom_post_types')->where('key', $slug)->first();
+            // Lookup CPT by configured slug or key
+            $cpt = DB::table('custom_post_types')->get()->first(function ($type) use ($slug) {
+                $settings = json_decode($type->settings, true) ?? [];
+                $typeSlug = $settings['slug'] ?? $type->key;
+                return $typeSlug === $slug;
+            });
+
             if ($cpt) {
                 // Check if archive enabled? Assuming yes if public.
                 $posts = Post::with('seo')
-                    ->where('type', $slug)
+                    ->where('type', $cpt->key)
                     ->whereIn('status', ['publish'])
                     ->orderBy('created_at', 'desc')
                     ->paginate(10);
@@ -265,20 +271,28 @@ class FrontendController extends Controller
 
         // 4. Try Custom Post Types (e.g. /movie/title)
         if (count($segments) >= 2) {
-            $possibleType = $segments[0];
+            $possibleTypeSlug = $segments[0];
             // If we have intermediate segments (hierarchy), use end logic, but usually CPTs are flat /type/slug
             $possibleSlug = end($segments);
 
+            // Resolve Slug to Key
+            $cptType = DB::table('custom_post_types')->get()->first(function ($type) use ($possibleTypeSlug) {
+                $settings = json_decode($type->settings, true) ?? [];
+                $typeSlug = $settings['slug'] ?? $type->key;
+                return $typeSlug === $possibleTypeSlug;
+            });
+
+            $cptKey = $cptType ? $cptType->key : $possibleTypeSlug;
+
             // Check if this type exists and has this post
             // We allow any type name here, effectively dynamic routing
-            $cptPost = Post::where('type', $possibleType)
+            $cptPost = Post::where('type', $cptKey)
                 ->where('slug', $possibleSlug)
                 ->whereIn('status', ['publish', 'private'])
                 ->first();
 
             if ($cptPost) {
                 // Check if CPT is publicly queryable
-                $cptType = DB::table('custom_post_types')->where('key', $possibleType)->first();
                 if ($cptType) {
                     $settings = json_decode($cptType->settings, true) ?? [];
                     if (empty($settings['publicly_queryable'])) {

@@ -34,7 +34,16 @@ class Post extends Model
 
         // For Custom Post Types (not post, page, attachment)
         if (!in_array($this->type, ['post', 'page', 'attachment', 'revision', 'nav_menu_item'])) {
-            return url($this->type . '/' . $this->slug);
+            $cptSlug = \Illuminate\Support\Facades\Cache::remember("cpt_slug_{$this->type}", 600, function () {
+                $cpt = \Illuminate\Support\Facades\DB::table('custom_post_types')->where('key', $this->type)->first();
+                if ($cpt) {
+                    $settings = json_decode($cpt->settings, true) ?? [];
+                    return $settings['slug'] ?? $this->type;
+                }
+                return $this->type;
+            });
+
+            return url($cptSlug . '/' . $this->slug);
         }
 
         // For Standard Posts

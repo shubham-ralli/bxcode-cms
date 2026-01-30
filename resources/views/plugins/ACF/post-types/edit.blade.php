@@ -12,14 +12,21 @@
             </a>
         </div>
 
-        <form action="{{ route('admin.post-types.update', $postType->id) }}" method="POST">
+        <form action="{{ route('admin.post-types.update', $postType->id) }}" method="POST" 
+              x-data="postTypeForm({
+                  plural: '{{ addslashes($postType->plural_label) }}',
+                  singular: '{{ addslashes($postType->singular_label) }}',
+                  slug: '{{ addslashes($postType->settings['slug'] ?? $postType->key) }}',
+                  labels: {{ json_encode($postType->labels ?? []) }}
+              })">
             @csrf
             @method('PUT')
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 
                 <!-- Left Column (Tabs) -->
-                <div class="lg:col-span-2 bg-white rounded-lg shadow" x-data="{ tab: 'general' }">
+                <div class="lg:col-span-2 bg-white rounded-lg shadow" 
+                     x-data="{ tab: 'general' }">
                     
                     <!-- Tabs Navigation -->
                     <div class="border-b border-gray-200">
@@ -51,13 +58,13 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Plural Label <span class="text-red-500">*</span></label>
-                                    <input type="text" name="plural_label" value="{{ old('plural_label', $postType->plural_label) }}" required
+                                    <input type="text" name="plural_label" x-model="plural" @input="updatePluralRelated" required
                                         class="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 bg-gray-50 p-3">
                                 </div>
 
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Singular Label <span class="text-red-500">*</span></label>
-                                    <input type="text" name="singular_label" value="{{ old('singular_label', $postType->singular_label) }}" required
+                                    <input type="text" name="singular_label" x-model="singular" @input="updateSingularRelated" required
                                         class="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 bg-gray-50 p-3">
                                 </div>
                             </div>
@@ -131,8 +138,7 @@
                                         <label class="block text-sm font-medium text-gray-700 mb-1">Slug (URL)</label>
                                         <div class="flex rounded-md shadow-sm">
                                             <span class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">/</span>
-                                            <input type="text" name="settings[slug]"
-                                                value="{{ old('settings.slug', $postType->settings['slug'] ?? $postType->key) }}"
+                                            <input type="text" name="settings[slug]" x-model="slug"
                                                 class="focus:ring-indigo-500 focus:border-indigo-500 flex-1 block w-full rounded-none rounded-r-md sm:text-sm border-gray-300 bg-gray-50 p-3">
                                         </div>
                                     </div>
@@ -188,8 +194,7 @@
                                 @foreach($labelFields as $key => $label)
                                     <div>
                                         <label class="block text-xs font-medium text-gray-500 uppercase mb-1">{{ $label }}</label>
-                                        <input type="text" name="labels[{{ $key }}]"
-                                            value="{{ old('labels.' . $key, $postType->labels[$key] ?? '') }}"
+                                        <input type="text" name="labels[{{ $key }}]" x-model="labels['{{ $key }}']"
                                             class="w-full border-gray-300 rounded-md text-sm focus:border-indigo-500 focus:ring-indigo-500 bg-gray-50 p-3">
                                     </div>
                                 @endforeach
@@ -226,4 +231,42 @@
             </div>
         </form>
     </div>
+
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('postTypeForm', (initialData) => ({
+                plural: initialData.plural,
+                singular: initialData.singular,
+                slug: initialData.slug,
+                labels: initialData.labels,
+
+                init() {},
+
+                updatePluralRelated() {
+                    const plural = this.plural;
+                    this.slug = plural.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+                    
+                    this.labels.menu_name = plural;
+                    this.labels.all_items = `All ${plural}`;
+                    this.labels.search_items = `Search ${plural}`;
+                },
+
+                updateSingularRelated() {
+                    const singular = this.singular;
+                    this.slug = singular.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+                    
+                    // Only update 'add_new' if it's generic ("Add New") or matches old pattern? 
+                    // Usually 'add_new' is just "Add New", let's keep it static or rely on backend default if empty.
+                    // But user might want "Add New Book". Let's stick to commonly used defaults.
+                    
+                    this.labels.add_new_item = `Add New ${singular}`;
+                    this.labels.edit_item = `Edit ${singular}`;
+                    this.labels.new_item = `New ${singular}`;
+                    this.labels.view_item = `View ${singular}`;
+                    this.labels.not_found = `No ${singular} found`;
+                    this.labels.not_found_in_trash = `No ${singular} found in Trash`;
+                }
+            }));
+        });
+    </script>
 @endsection

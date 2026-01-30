@@ -119,7 +119,7 @@ class PostController extends Controller
     {
         $request->validate([
             'title' => 'required',
-            'slug' => 'required|unique:posts,slug',
+            'slug' => 'required',
             'content' => 'nullable',
             'type' => 'required',
             'status' => 'required',
@@ -130,9 +130,16 @@ class PostController extends Controller
             'categories' => 'nullable|array',
         ]);
 
+        $uniqueSlug = $this->generateUniqueSlug(
+            $request->input('slug'),
+            null,
+            $request->input('type'),
+            $request->input('parent_id')
+        );
+
         $post = Post::create([
             'title' => $request->input('title'),
-            'slug' => Str::slug($request->input('slug')),
+            'slug' => $uniqueSlug,
             'content' => $request->input('content'),
             'type' => $request->input('type'),
             'status' => $request->input('status'),
@@ -199,8 +206,7 @@ class PostController extends Controller
 
         $request->validate([
             'title' => 'required',
-            // Allow same slug if it's the current post
-            'slug' => 'required|unique:posts,slug,' . $post->id,
+            'slug' => 'required',
             'content' => 'nullable',
             'type' => 'required',
             'status' => 'required',
@@ -211,9 +217,16 @@ class PostController extends Controller
             'categories' => 'nullable|array',
         ]);
 
+        $uniqueSlug = $this->generateUniqueSlug(
+            $request->input('slug'),
+            $post->id,
+            $request->input('type'),
+            $request->input('parent_id')
+        );
+
         $post->update([
             'title' => $request->input('title'),
-            'slug' => Str::slug($request->input('slug')),
+            'slug' => $uniqueSlug,
             'content' => $request->input('content'),
             'type' => $request->input('type'),
             'status' => $request->input('status'),
@@ -239,6 +252,32 @@ class PostController extends Controller
 
 
         return back()->with('success', ucfirst($post->type) . ' "' . $post->title . '" updated successfully.');
+    }
+
+    /**
+     * Generate a unique slug scoped by type and parent_id.
+     */
+    private function generateUniqueSlug($slug, $ignoreId = null, $type = 'post', $parentId = null)
+    {
+        $slug = Str::slug($slug);
+        $originalSlug = $slug;
+        $count = 1;
+
+        // Check if slug exists in DB within the same scope (type & parent)
+        while (
+            Post::where('slug', $slug)
+                ->where('type', $type)
+                ->where('parent_id', $parentId)
+                ->when($ignoreId, function ($q) use ($ignoreId) {
+                    return $q->where('id', '!=', $ignoreId);
+                })->exists()
+        ) {
+
+            $slug = "{$originalSlug}-{$count}";
+            $count++;
+        }
+
+        return $slug;
     }
 
     /**
