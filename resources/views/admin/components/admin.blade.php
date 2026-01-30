@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Admin Panel') - BxCode CMS</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
     @php
         $siteIconId = \App\Models\Setting::get('site_icon');
@@ -873,6 +874,64 @@
                                 resize: true,
                                 menubar: false,
                                 statusbar: false,
+                                images_upload_handler: (blobInfo, progress) => new Promise((resolve, reject) => {
+                                    const xhr = new XMLHttpRequest();
+                                    xhr.withCredentials = false;
+                                    xhr.open('POST', '{{ route("admin.media.upload") }}');
+
+                                    // CSRF Token
+                                    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                                    if (token) {
+                                        xhr.setRequestHeader('X-CSRF-TOKEN', token);
+                                    }
+
+                                    xhr.upload.onprogress = (e) => {
+                                        progress(e.loaded / e.total * 100);
+                                    };
+
+                                    xhr.onload = () => {
+                                        if (xhr.status === 403) {
+                                            reject({ message: 'HTTP Error: ' + xhr.status, remove: true });
+                                            return;
+                                        }
+
+                                        if (xhr.status < 200 || xhr.status >= 300) {
+                                            reject('HTTP Error: ' + xhr.status);
+                                            return;
+                                        }
+
+                                        const json = JSON.parse(xhr.responseText);
+
+                                        if (!json || typeof json.location != 'string') {
+                                            reject('Invalid JSON: ' + xhr.responseText);
+                                            return;
+                                        }
+
+                                        // Add class to the image in the editor
+                                        // We find the image by its blob URI (which it currently has)
+                                        if (self.editor) {
+                                            const img = self.editor.dom.select('img[src="' + blobInfo.blobUri() + '"]')[0];
+                                            if (img) {
+                                                self.editor.dom.addClass(img, 'bx-image-' + json.id);
+                                            }
+                                        }
+
+                                        resolve(json.location);
+                                    };
+
+                                    xhr.onerror = () => {
+                                        reject('Image upload failed due to a XHR Transport error. Code: ' + xhr.status);
+                                    };
+
+                                    const formData = new FormData();
+                                    formData.append('file', blobInfo.blob(), blobInfo.filename());
+
+                                    xhr.send(formData);
+                                }),
+                                relative_urls: false,
+                                remove_script_host: false,
+                                convert_urls: true,
+                                image_title: true,
                                 promotion: false,
                                 plugins: 'preview importcss searchreplace autolink autosave save directionality code visualblocks visualchars fullscreen image link media template codesample table charmap pagebreak nonbreaking anchor insertdatetime advlist lists wordcount help charmap quickbars emoticons',
                                 toolbar: 'blocks | bold italic underline strikethrough | alignleft aligncenter alignright | outdent indent |  numlist bullist | insertfile image media link',
@@ -885,6 +944,40 @@
                                     });
                                     editor.on('change', function () {
                                         editor.save();
+                                    });
+
+                                    // Listen for Image Update Dialog
+                                    editor.on('ExecCommand', function (e) {
+                                        if (e.command === 'mceUpdateImage') {
+                                            const img = editor.selection.getNode();
+                                            if (img.nodeName === 'IMG') {
+                                                // Check for bx-image-{id} class
+                                                const matches = img.className.match(/bx-image-(\d+)/);
+                                                if (matches && matches[1]) {
+                                                    const mediaId = matches[1];
+                                                    const altText = img.getAttribute('alt');
+                                                    const title = img.getAttribute('title'); // TinyMCE might not set title by default but good to have
+
+                                                    // Send Update Request
+                                                    const xhr = new XMLHttpRequest();
+                                                    xhr.open('POST', '{{ url("lp-admin/media") }}/' + mediaId); 
+                                                    xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+                                                    
+                                                    // CSRF Token
+                                                    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                                                    if (token) {
+                                                        xhr.setRequestHeader('X-CSRF-TOKEN', token);
+                                                    }
+
+                                                    // Spoof PUT for Laravel
+                                                    xhr.send(JSON.stringify({
+                                                        _method: 'PUT',
+                                                        alt_text: altText,
+                                                        title: title
+                                                    }));
+                                                }
+                                            }
+                                        }
                                     });
                                 }
                             });

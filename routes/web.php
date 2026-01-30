@@ -24,6 +24,7 @@ Route::prefix('lp-admin')->group(function () {
     Route::middleware('auth')->group(function () {
         Route::get('/', [App\Http\Controllers\AdminController::class, 'index'])->name('admin.dashboard');
         Route::get('/media', [App\Http\Controllers\MediaController::class, 'index'])->name('admin.media.index');
+        Route::post('/media/upload', [App\Http\Controllers\MediaController::class, 'upload'])->name('admin.media.upload');
         Route::post('/media', [App\Http\Controllers\MediaController::class, 'store'])->name('admin.media.store');
         Route::delete('/media/bulk-delete', [App\Http\Controllers\MediaController::class, 'bulkDestroy'])->name('admin.media.bulk-delete');
         Route::put('/media/{id}', [App\Http\Controllers\MediaController::class, 'update'])->name('admin.media.update');

@@ -148,6 +148,51 @@ class MediaController extends Controller
         return back()->with('success', 'Media updated successfully');
     }
 
+    /**
+     * Handle TinyMCE Image Upload
+     */
+    public function upload(Request $request)
+    {
+        // TinyMCE sends file as 'file' by default, or we can configure it.
+        // Let's assume standard form data
+        if ($request->hasFile('file')) {
+            $file = $request->file('file');
+
+            // Reusing logic from store, but simplified for API
+            $year = date('Y');
+            $month = date('m');
+            $directory = "uploads/{$year}/{$month}";
+            $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+            $extension = $file->getClientOriginalExtension();
+            $filename = Str::slug($originalName) . '.' . $extension;
+
+            $counter = 1;
+            while (Storage::disk('public')->exists("{$directory}/{$filename}")) {
+                $filename = Str::slug($originalName) . '-' . $counter . '.' . $extension;
+                $counter++;
+            }
+
+            $path = $file->storeAs($directory, $filename, 'public');
+
+            $media = Media::create([
+                'filename' => $filename,
+                'path' => '/public/storage/' . $path,
+                'mime_type' => $file->getMimeType(),
+                'size' => $file->getSize(),
+                'title' => $originalName,
+            ]);
+
+            // TinyMCE expects { location: 'url' }
+            // We also send ID for frontend manipulation
+            return response()->json([
+                'location' => asset($media->path), // asset() handles public path
+                'id' => $media->id
+            ]);
+        }
+
+        return response()->json(['error' => 'No file uploaded'], 400);
+    }
+
     public function destroy(Request $request, $id)
     {
         $media = Media::findOrFail($id);
