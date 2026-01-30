@@ -70,7 +70,7 @@
 
             <!-- Edit Post Link (Frontend Only) -->
             @if(isset($post) && !Request::is('lp-admin*'))
-                <a href="{{ route('admin.posts.edit', $post->id) }}" class="ab-item"
+                <a href="{{ route('admin.posts.edit', ['post' => $post->id]) }}" class="ab-item"
                     style="color: #f0f0f1; text-decoration: none; display: flex; align-items: center; gap: 5px; height: 32px; padding: 0 10px;"
                     onmouseover="this.style.backgroundColor='#3c434a'; this.style.color='#72aee6'"
                     onmouseout="this.style.backgroundColor='transparent'; this.style.color='#f0f0f1'">
