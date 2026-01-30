@@ -9,12 +9,33 @@ use Illuminate\Support\Str;
 
 class PostTypeController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $postTypes = CustomPostType::orderBy('plural_label')->paginate(20);
-        $counts = [];
-        $status = null;
-        $search = null;
+        $status = $request->get('status', 'all');
+        $search = $request->get('s');
+
+        $query = CustomPostType::query();
+
+        if ($search) {
+            $query->where('plural_label', 'like', "%{$search}%")
+                ->orWhere('key', 'like', "%{$search}%");
+        }
+
+        // Calculate counts
+        $counts = [
+            'all' => CustomPostType::count(),
+            'publish' => CustomPostType::where('active', 1)->count(),
+            'inactive' => CustomPostType::where('active', 0)->count(),
+        ];
+
+        // Apply Status Filter
+        if ($status === 'publish') {
+            $query->where('active', 1);
+        } elseif ($status === 'inactive') {
+            $query->where('active', 0);
+        }
+
+        $postTypes = $query->orderBy('plural_label')->paginate(20);
 
         return plugin_view('acf::post-types.index', compact('postTypes', 'counts', 'status', 'search'));
     }
@@ -38,6 +59,21 @@ class PostTypeController extends Controller
 
         $validated['supports'] = $request->input('supports', CustomPostType::getDefaultSupports());
         $validated['settings'] = $request->input('settings', []);
+
+        // Auto-assign supports based on Capability Type
+        $capabilityType = $validated['settings']['capability_type'] ?? 'post';
+
+        if ($capabilityType === 'post') {
+            if (!in_array('post_formats', $validated['supports'])) {
+                $validated['supports'][] = 'post_formats';
+            }
+            // Remove page_attributes if present? - User didn't ask to remove, but implied exclusivity.
+            // Let's keep it additive unless conflict.
+        } elseif ($capabilityType === 'page') {
+            if (!in_array('page_attributes', $validated['supports'])) {
+                $validated['supports'][] = 'page_attributes';
+            }
+        }
 
         // Generate Default Labels
         $labels = $request->input('labels', []);
@@ -70,6 +106,19 @@ class PostTypeController extends Controller
 
         $validated['supports'] = $request->input('supports', []);
         $validated['settings'] = $request->input('settings', []);
+
+        // Auto-assign supports based on Capability Type
+        $capabilityType = $validated['settings']['capability_type'] ?? 'post';
+
+        if ($capabilityType === 'post') {
+            if (!in_array('post_formats', $validated['supports'])) {
+                $validated['supports'][] = 'post_formats';
+            }
+        } elseif ($capabilityType === 'page') {
+            if (!in_array('page_attributes', $validated['supports'])) {
+                $validated['supports'][] = 'page_attributes';
+            }
+        }
 
         // Generate Default Labels
         $labels = $request->input('labels', []);
@@ -134,12 +183,13 @@ class PostTypeController extends Controller
     {
         $request->validate([
             'ids' => 'required|array',
-            'action' => 'required|in:delete',
+            'action' => 'required|in:delete,activate,deactivate',
         ]);
 
-        if ($request->input('action') === 'delete') {
-            $ids = $request->input('ids');
+        $action = $request->input('action');
+        $ids = $request->input('ids');
 
+        if ($action === 'delete') {
             // Get keys of types being deleted
             $keys = CustomPostType::whereIn('id', $ids)->pluck('key');
 
@@ -150,6 +200,12 @@ class PostTypeController extends Controller
 
             CustomPostType::destroy($ids);
             return redirect()->route('admin.post-types.index')->with('success', 'Selected Post Types and associated posts deleted.');
+        } elseif ($action === 'activate') {
+            CustomPostType::whereIn('id', $ids)->update(['active' => 1]);
+            return redirect()->route('admin.post-types.index')->with('success', 'Selected Post Types activated.');
+        } elseif ($action === 'deactivate') {
+            CustomPostType::whereIn('id', $ids)->update(['active' => 0]);
+            return redirect()->route('admin.post-types.index')->with('success', 'Selected Post Types deactivated.');
         }
 
         return redirect()->route('admin.post-types.index')->with('error', 'Invalid action.');

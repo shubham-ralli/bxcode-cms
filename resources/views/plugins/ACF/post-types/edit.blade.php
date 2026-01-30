@@ -80,6 +80,7 @@
                                 <h3 class="text-lg font-medium text-gray-900 mb-4">Supports</h3>
                                 <div class="grid grid-cols-2 gap-4">
                                     @foreach($supports as $key => $label)
+                                        @if(in_array($key, ['comments', 'revisions', 'trackbacks', 'page_attributes', 'post_formats', 'custom_fields', 'author'])) @continue @endif
                                         <label class="flex items-center space-x-3 cursor-pointer p-2 hover:bg-gray-50 rounded border border-transparent hover:border-gray-200">
                                             <input type="checkbox" name="supports[]" value="{{ $key }}"
                                                 class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 h-4 w-4" 
@@ -179,14 +180,7 @@
                                 $labelFields = [
                                     'menu_name' => 'Menu Name',
                                     'all_items' => 'All Items',
-                                    'add_new' => 'Add New',
-                                    'add_new_item' => 'Add New Item',
-                                    'edit_item' => 'Edit Item',
-                                    'new_item' => 'New Item',
-                                    'view_item' => 'View Item',
-                                    'search_items' => 'Search Items',
-                                    'not_found' => 'Not Found',
-                                    'not_found_in_trash' => 'Not Found in Trash'
+                                    'add_new' => 'Add New'
                                 ];
                             @endphp
 

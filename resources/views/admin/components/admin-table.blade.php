@@ -44,29 +44,48 @@
 
     {{-- 2. Bulk Actions Wrapper & Table --}}
     @php
-        $WrapperTag = $bulkRoute ? 'form' : 'div';
-        $WrapperAttrs = $bulkRoute ? 'action='.route($bulkRoute).' method=POST id=bulkActionForm' : '';
+        $hasBulk = !empty($bulkRoute);
     @endphp
 
-    <{{ $WrapperTag }} {!! $WrapperAttrs !!}>
-        @if($bulkRoute) @csrf @endif
-
+    <div>
         {{-- Toolbar Row: Bulk Actions (Left) + Search (Right) --}}
         <div class="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             {{-- Left: Bulk Actions --}}
             <div>
-                @if($bulkRoute)
+                @if($hasBulk)
                     <div class="flex items-center gap-2">
-                        <select name="action" class="shadow-sm border border-gray-300 rounded-lg py-2 pl-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white" required>
+                        <select name="action" form="bulkActionForm" class="shadow-sm border border-gray-300 rounded-lg py-2 pl-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white" required>
                             <option value="" disabled selected>Bulk Actions</option>
                             @if($status === 'trash')
                                 <option value="restore">Restore</option>
                                 <option value="delete">Delete Permanently</option>
                             @else
-                                <option value="delete">Delete Permanently</option>
+                                {{-- Smart Bulk Options based on Capabilities (Counts) --}}
+                                @if(isset($counts['inactive']))
+                                    <option value="activate">Activate</option>
+                                    <option value="deactivate">Deactivate</option>
+                                @endif
+                                
+                                @if(isset($counts['trash']))
+                                    <option value="trash">Move to Trash</option>
+                                @else
+                                    {{-- If no trash support, allow direct delete --}}
+                                    <option value="delete">Delete Permanently</option>
+                                @endif
+                                
+                                {{-- Status Options --}}
+                                @if(isset($counts['publish']) && (isset($counts['draft']) || isset($counts['private'])))
+                                    <option value="publish">Edit to Public</option>
+                                @endif
+                                @if(isset($counts['draft']))
+                                    <option value="draft">Edit to Draft</option>
+                                @endif
+                                @if(isset($counts['private']))
+                                    <option value="private">Edit to Private</option>
+                                @endif
                             @endif
                         </select>
-                        <button type="submit" class="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-2 px-4 rounded-lg shadow-sm text-sm transition-colors" 
+                        <button type="submit" form="bulkActionForm" class="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-2 px-4 rounded-lg shadow-sm text-sm transition-colors" 
                                 onclick="return confirm('Are you sure you want to apply this action to selected items?');">
                             Apply
                         </button>
@@ -90,7 +109,14 @@
         </div>
 
         {{-- The Table Card --}}
-        <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+        @php
+            $TableTag = $hasBulk ? 'form' : 'div';
+            $TableAttrs = $hasBulk ? 'action='.route($bulkRoute).' method=POST id=bulkActionForm' : '';
+        @endphp
+
+        <{{ $TableTag }} {!! $TableAttrs !!} class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+            @if($hasBulk) @csrf @endif
+            
             @if($pagination)
                 <div class="px-5 py-3 border-b border-gray-200">
                     {{ $pagination->links() }}
@@ -115,6 +141,6 @@
                     {{ $pagination->links() }}
                 </div>
             @endif
-        </div>
-    </{{ $WrapperTag }}>
+        </{{ $TableTag }}>
+    </div>
 </div>

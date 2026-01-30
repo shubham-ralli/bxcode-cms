@@ -178,7 +178,12 @@ class FrontendController extends Controller
             });
 
             if ($cpt) {
-                // Check if archive enabled? Assuming yes if public.
+                // Check if archive is enabled in settings
+                $settings = json_decode($cpt->settings, true) ?? [];
+                if (empty($settings['has_archive'])) {
+                    abort(404);
+                }
+
                 $posts = Post::with('seo')
                     ->where('type', $cpt->key)
                     ->whereIn('status', ['publish'])
@@ -374,12 +379,14 @@ class FrontendController extends Controller
                 $cpt = DB::table('custom_post_types')->where('key', $post->type)->first();
                 if ($cpt) {
                     $settings = json_decode($cpt->settings, true) ?? [];
-                    $capability = $settings['capability_type'] ?? 'page';
+                    // Default to 'post' as it's the standard behavior for CPTs
+                    $capability = $settings['capability_type'] ?? 'post';
 
-                    if ($capability === 'post') {
-                        $view = "themes.{$theme}.post";
-                    } else {
+                    if ($capability === 'page') {
                         $view = "themes.{$theme}.page";
+                    } else {
+                        // Default/Post behavior
+                        $view = "themes.{$theme}.post";
                     }
                 }
             }

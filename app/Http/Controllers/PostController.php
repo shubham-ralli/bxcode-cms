@@ -360,7 +360,7 @@ class PostController extends Controller
     public function bulkAction(Request $request)
     {
         $request->validate([
-            'action' => 'required|in:trash,restore,delete',
+            'action' => 'required|in:trash,restore,delete,draft,private,publish',
             'ids' => 'required|array',
             'ids.*' => 'exists:posts,id',
         ]);
@@ -375,12 +375,13 @@ class PostController extends Controller
         } elseif ($action === 'restore') {
             $count = Post::whereIn('id', $ids)->where('status', 'trash')->update(['status' => 'draft']);
         } elseif ($action === 'delete') {
-            $count = Post::whereIn('id', $ids)->delete(); // Permanent delete based on model event or standard delete? 
-            // Since we are using a manual status for trash, delete() deletes the record.
-            // If checking strictness: only delete if in trash?
-            // User requested "Restore or Delete permanently option show" usually implies from trash.
-            // But if I want to support bulk delete from anywhere?
-            // Let's stick to safe logic: simple delete() removes the row.
+            $count = Post::whereIn('id', $ids)->delete();
+        } elseif ($action === 'draft') {
+            $count = Post::whereIn('id', $ids)->update(['status' => 'draft']);
+        } elseif ($action === 'private') {
+            $count = Post::whereIn('id', $ids)->update(['status' => 'private']);
+        } elseif ($action === 'publish') {
+            $count = Post::whereIn('id', $ids)->update(['status' => 'publish']);
         }
 
         return back()->with('success', "Bulk action applied to selected items.");
