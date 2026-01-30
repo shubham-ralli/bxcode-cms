@@ -11,8 +11,9 @@ class PluginController extends Controller
     public function index(Request $request)
     {
         $search = $request->get('s');
+        $status = $request->get('status', 'all');
         $pluginsPath = resource_path('views/plugins');
-        $plugins = [];
+        $allPlugins = [];
 
         if (File::isDirectory($pluginsPath)) {
             $pluginDirs = File::directories($pluginsPath);
@@ -31,7 +32,7 @@ class PluginController extends Controller
                 // Check if plugin is active (stored in settings)
                 $isActive = Setting::get("plugin_{$pluginName}_active", '0') === '1';
 
-                $plugins[] = [
+                $allPlugins[] = [
                     'name' => $config['name'] ?? $pluginName,
                     'slug' => $pluginName,
                     'description' => $config['description'] ?? 'No description available.',
@@ -43,16 +44,45 @@ class PluginController extends Controller
             }
         }
 
-        // Filter by Search
+        // 1. Calculate Counts (Before filtering)
+        $counts = [
+            'all' => count($allPlugins),
+            'active' => count(array_filter($allPlugins, fn($p) => $p['is_active'])),
+            'inactive' => count(array_filter($allPlugins, fn($p) => !$p['is_active'])),
+        ];
+
+        // 2. Filter by Status
+        $filteredPlugins = $allPlugins;
+        if ($status === 'active') {
+            $filteredPlugins = array_filter($filteredPlugins, fn($p) => $p['is_active']);
+        } elseif ($status === 'inactive') {
+            $filteredPlugins = array_filter($filteredPlugins, fn($p) => !$p['is_active']);
+        }
+
+        // 3. Filter by Search
         if ($search) {
-            $plugins = array_filter($plugins, function ($plugin) use ($search) {
+            $filteredPlugins = array_filter($filteredPlugins, function ($plugin) use ($search) {
                 return stripos($plugin['name'], $search) !== false ||
                     stripos($plugin['description'], $search) !== false ||
                     stripos($plugin['slug'], $search) !== false;
             });
         }
 
-        return view('admin.plugins.index', compact('plugins', 'search'));
+        // 4. Pagination
+        $page = $request->get('page', 1);
+        $perPage = 10;
+        $offset = ($page - 1) * $perPage;
+
+        $items = array_slice($filteredPlugins, $offset, $perPage);
+        $plugins = new \Illuminate\Pagination\LengthAwarePaginator(
+            $items,
+            count($filteredPlugins),
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+
+        return view('admin.plugins.index', compact('plugins', 'counts', 'status', 'search'));
     }
 
     public function bulk(Request $request)
