@@ -190,11 +190,11 @@ add_plugin_admin_route('acf/field-groups/action/bulk', [ACFController::class, 'b
 add_plugin_admin_route('acf/field-groups/{id}/toggle', [ACFController::class, 'toggleStatus'], 'admin.acf.toggle', ['POST']);
 
 // Post Types Routes (acf-post-type)
-add_plugin_admin_route('acf/post-types', [PostTypeController::class, 'index'], 'admin.post-types.index');
-add_plugin_admin_route('acf/post-types/create', [PostTypeController::class, 'create'], 'admin.post-types.create');
-add_plugin_admin_route('acf/post-types', [PostTypeController::class, 'store'], 'admin.post-types.store', ['POST']);
-add_plugin_admin_route('acf/post-types/{id}/edit', [PostTypeController::class, 'edit'], 'admin.post-types.edit');
-add_plugin_admin_route('acf/post-types/{id}', [PostTypeController::class, 'update'], 'admin.post-types.update', ['PUT']);
-add_plugin_admin_route('acf/post-types/{id}', [PostTypeController::class, 'destroy'], 'admin.post-types.destroy', ['DELETE']);
-add_plugin_admin_route('acf/post-types/action/bulk', [PostTypeController::class, 'bulkDestroy'], 'admin.post-types.bulk', ['POST']);
-add_plugin_admin_route('acf/post-types/{id}/toggle', [PostTypeController::class, 'toggleStatus'], 'admin.post-types.toggle', ['POST']);
+add_plugin_admin_route('acf/post-types', [PostTypeController::class, 'index'], 'admin.acf.post-types.index');
+add_plugin_admin_route('acf/post-types/create', [PostTypeController::class, 'create'], 'admin.acf.post-types.create');
+add_plugin_admin_route('acf/post-types', [PostTypeController::class, 'store'], 'admin.acf.post-types.store', ['POST']);
+add_plugin_admin_route('acf/post-types/{id}/edit', [PostTypeController::class, 'edit'], 'admin.acf.post-types.edit');
+add_plugin_admin_route('acf/post-types/{id}', [PostTypeController::class, 'update'], 'admin.acf.post-types.update', ['PUT']);
+add_plugin_admin_route('acf/post-types/{id}', [PostTypeController::class, 'destroy'], 'admin.acf.post-types.destroy', ['DELETE']);
+add_plugin_admin_route('acf/post-types/action/bulk', [PostTypeController::class, 'bulkDestroy'], 'admin.acf.post-types.bulk', ['POST']);
+add_plugin_admin_route('acf/post-types/{id}/toggle', [PostTypeController::class, 'toggleStatus'], 'admin.acf.post-types.toggle', ['POST']);

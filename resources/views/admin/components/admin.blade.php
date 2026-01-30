@@ -53,8 +53,12 @@
             text-align: center;
         }
 
-        .sidebar-collapsed #sidebarLogo span {
+        .sidebar-collapsed #sidebarLogo .logo-full {
             display: none;
+        }
+
+        .sidebar-collapsed #sidebarLogo .logo-short {
+            display: inline-block !important;
         }
 
         /* Submenu Styling */
@@ -183,7 +187,7 @@
                 <ul class="space-y-1 px-3">
                     <li class="group relative">
                         <a href="{{ route('admin.dashboard') }}"
-                            class="flex items-center px-2 py-2 rounded-lg transition-colors duration-200 {{ request()->routeIs('admin.dashboard') ? 'bg-indigo-600 text-white shadow-md' : 'hover:bg-slate-800 hover:text-white' }}"
+                            class="flex items-center px-2 py-2 rounded-lg transition-colors duration-200 {{ request()->routeIs('admin.dashboard') ? 'bg-indigo-500 text-white shadow-md' : 'hover:bg-slate-800 hover:text-white' }}"
                             title="Dashboard">
                             <svg class="w-5 h-5 min-w-[1.25rem] mr-3 {{ request()->routeIs('admin.dashboard') ? 'text-white' : 'text-slate-500 group-hover:text-white' }}"
                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -201,7 +205,7 @@
                     <li class="group relative"
                         x-data="{ open: {{ request()->query('type') == 'post' || request()->routeIs('admin.tags.*') ? 'true' : 'false' }} }">
                         <button @click="open = !open"
-                            class="w-full flex items-center justify-between px-2 py-2 rounded-lg transition-colors duration-200 group-hover:bg-slate-800 hover:text-white {{ request()->query('type') == 'post' || request()->routeIs('admin.tags.*') ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-300' }}"
+                            class="w-full flex items-center justify-between px-2 py-2 rounded-lg transition-colors duration-200 group-hover:bg-slate-800 hover:text-white {{ request()->query('type') == 'post' || request()->routeIs('admin.tags.*') ? 'bg-indigo-500 text-white shadow-md' : 'text-slate-300' }}"
                             title="Posts">
                             <div class="flex items-center">
                                 <svg class="w-5 h-5 min-w-[1.25rem] mr-3 {{ request()->query('type') == 'post' || request()->routeIs('admin.tags.*') ? 'text-white' : 'text-slate-500 group-hover:text-white' }}"
@@ -270,25 +274,65 @@
                             </ul>
                         </div>
                     </li>
-                    <li class="group relative">
-                        <a href="{{ route('admin.posts.index', ['type' => 'page']) }}"
-                            class="flex items-center px-2 py-2 rounded-lg transition-colors duration-200 {{ request()->query('type') == 'page' ? 'bg-indigo-600 text-white shadow-md' : 'hover:bg-slate-800 hover:text-white' }}"
+                    <li class="group relative"
+                        x-data="{ open: {{ request()->query('type') == 'page' ? 'true' : 'false' }} }">
+                        <button @click="open = !open"
+                            class="w-full flex items-center justify-between px-2 py-2 rounded-lg transition-colors duration-200 group-hover:bg-slate-800 hover:text-white {{ request()->query('type') == 'page' ? 'bg-indigo-500 text-white shadow-md' : 'text-slate-300' }}"
                             title="Pages">
-                            <svg class="w-5 h-5 min-w-[1.25rem] mr-3 {{ request()->query('type') == 'page' ? 'text-white' : 'text-slate-500 group-hover:text-white' }}"
-                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div class="flex items-center">
+                                <svg class="w-5 h-5 min-w-[1.25rem] mr-3 {{ request()->query('type') == 'page' ? 'text-white' : 'text-slate-500 group-hover:text-white' }}"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                                    </path>
+                                </svg>
+                                <span class="sidebar-label whitespace-nowrap">Pages</span>
+                            </div>
+                            <svg class="w-4 h-4 transition-transform duration-200 dropdown-chevron"
+                                :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                                    d="M19 9l-7 7-7-7">
                                 </path>
                             </svg>
-                            <span class="sidebar-label whitespace-nowrap">Pages</span>
-                        </a>
+                        </button>
+
+                        <!-- Inline Submenu -->
+                        <ul x-show="open" x-cloak class="mt-2 space-y-1 submenu-inline rounded-lg"
+                            style="display: {{ request()->query('type') == 'page' ? 'block' : 'none' }}">
+                            <li>
+                                <a href="{{ route('admin.posts.index', ['type' => 'page']) }}"
+                                    class="submenu-item block px-4 py-2 rounded-lg text-sm transition-colors duration-200 {{ request()->query('type') == 'page' && request()->routeIs('admin.posts.index') ? 'text-white font-medium' : 'text-slate-400 hover:text-white' }}">
+                                    All Pages
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('admin.posts.create', ['type' => 'page']) }}"
+                                    class="submenu-item block px-4 py-2 rounded-lg text-sm transition-colors duration-200 {{ request()->routeIs('admin.posts.create') && request()->query('type') == 'page' ? 'text-white font-medium' : 'text-slate-400 hover:text-white' }}">
+                                    Add New
+                                </a>
+                            </li>
+                        </ul>
+
+                        <!-- Flyout Menu -->
                         <div class="flyout-menu hidden bg-slate-800 rounded-r-lg shadow-xl overflow-hidden">
                             <div class="flyout-header">Pages</div>
+                            <ul class="py-2">
+                                <li>
+                                    <a href="{{ route('admin.posts.index', ['type' => 'page']) }}"
+                                        class="block px-4 py-2 text-sm text-slate-300 hover:text-white hover:bg-slate-700">All
+                                        Pages</a>
+                                </li>
+                                <li>
+                                    <a href="{{ route('admin.posts.create', ['type' => 'page']) }}"
+                                        class="block px-4 py-2 text-sm text-slate-300 hover:text-white hover:bg-slate-700">Add
+                                        New</a>
+                                </li>
+                            </ul>
                         </div>
                     </li>
                     <li class="group relative">
                         <a href="{{ route('admin.media.index') }}"
-                            class="flex items-center px-2 py-2 rounded-lg transition-colors duration-200 {{ request()->routeIs('admin.media.*') ? 'bg-indigo-600 text-white shadow-md' : 'hover:bg-slate-800 hover:text-white' }}"
+                            class="flex items-center px-2 py-2 rounded-lg transition-colors duration-200 {{ request()->routeIs('admin.media.*') ? 'bg-indigo-500 text-white shadow-md' : 'hover:bg-slate-800 hover:text-white' }}"
                             title="Media Library">
                             <svg class="w-5 h-5 min-w-[1.25rem] mr-3 {{ request()->routeIs('admin.media.*') ? 'text-white' : 'text-slate-500 group-hover:text-white' }}"
                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -412,13 +456,13 @@
                             style="display: {{ request()->routeIs('admin.themes.*') || request()->routeIs('admin.menus.*') ? 'block' : 'none' }}">
                             <li>
                                 <a href="{{ route('admin.themes.index') }}"
-                                    class="submenu-item block px-4 py-2 rounded-lg text-sm transition-colors duration-200 {{ request()->routeIs('admin.themes.*') ? 'text-white font-medium bg-indigo-500' : 'text-slate-400 hover:text-white' }}">
+                                    class="submenu-item block px-4 py-2 rounded-lg text-sm transition-colors duration-200 {{ request()->routeIs('admin.themes.*') ? 'text-white font-medium' : 'text-slate-400 hover:text-white' }}">
                                     Themes
                                 </a>
                             </li>
                             <li>
                                 <a href="{{ route('admin.menus.index') }}"
-                                    class="submenu-item block px-4 py-2 rounded-lg text-sm transition-colors duration-200 {{ request()->routeIs('admin.menus.*') ? 'text-white font-medium bg-indigo-500' : 'text-slate-400 hover:text-white' }}">
+                                    class="submenu-item block px-4 py-2 rounded-lg text-sm transition-colors duration-200 {{ request()->routeIs('admin.menus.*') ? 'text-white font-medium' : 'text-slate-400 hover:text-white' }}">
                                     Menus
                                 </a>
                             </li>
@@ -468,13 +512,13 @@
                             style="display: {{ request()->routeIs('admin.plugins.*') ? 'block' : 'none' }}">
                             <li>
                                 <a href="{{ route('admin.plugins.index') }}"
-                                    class="submenu-item block px-4 py-2 rounded-lg text-sm transition-colors duration-200 {{ request()->routeIs('admin.plugins.index') ? 'text-white font-medium bg-indigo-500' : 'text-slate-400 hover:text-white' }}">
+                                    class="submenu-item block px-4 py-2 rounded-lg text-sm transition-colors duration-200 {{ request()->routeIs('admin.plugins.index') ? 'text-white font-medium' : 'text-slate-400 hover:text-white' }}">
                                     Installed Plugins
                                 </a>
                             </li>
                             <li>
                                 <a href="{{ route('admin.plugins.create') }}"
-                                    class="submenu-item block px-4 py-2 rounded-lg text-sm transition-colors duration-200 {{ request()->routeIs('admin.plugins.create') ? 'text-white font-medium bg-indigo-500' : 'text-slate-400 hover:text-white' }}">
+                                    class="submenu-item block px-4 py-2 rounded-lg text-sm transition-colors duration-200 {{ request()->routeIs('admin.plugins.create') ? 'text-white font-medium' : 'text-slate-400 hover:text-white' }}">
                                     Add New
                                 </a>
                             </li>
@@ -586,13 +630,13 @@
                         @if(!empty($item['children']))
                             {{-- Menu with Children (like Users menu) --}}
                             <li class="group relative"
-                                x-data="{ open: {{ request()->routeIs($item['active_pattern']) ? 'true' : 'false' }} }">
+                                x-data="{ open: {{ (request()->routeIs($item['active_pattern']) && (!isset($item['active_queries']) || empty(array_diff_assoc($item['active_queries'], request()->query())))) ? 'true' : 'false' }} }">
                                 <button @click="open = !open"
-                                    class="w-full flex items-center justify-between px-2 py-2 rounded-lg transition-colors duration-200 group-hover:bg-slate-800 hover:text-white {{ request()->routeIs($item['active_pattern']) ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-300' }}"
+                                    class="w-full flex items-center justify-between px-2 py-2 rounded-lg transition-colors duration-200 group-hover:bg-slate-800 hover:text-white {{ (request()->routeIs($item['active_pattern']) && (!isset($item['active_queries']) || empty(array_diff_assoc($item['active_queries'], request()->query())))) ? 'bg-indigo-500 text-white shadow-md' : 'text-slate-300' }}"
                                     title="{{ $item['label'] }}">
                                     <div class="flex items-center">
                                         <div
-                                            class="w-5 h-5 min-w-[1.25rem] mr-3 {{ request()->routeIs($item['active_pattern']) ? 'text-white' : 'text-slate-500 group-hover:text-white' }}">
+                                            class="w-5 h-5 min-w-[1.25rem] mr-3 {{ (request()->routeIs($item['active_pattern']) && (!isset($item['active_queries']) || empty(array_diff_assoc($item['active_queries'], request()->query())))) ? 'text-white' : 'text-slate-500 group-hover:text-white' }}">
                                             {!! $item['icon'] !!}
                                         </div>
                                         <span class="sidebar-label whitespace-nowrap">{{ $item['label'] }}</span>
@@ -611,7 +655,7 @@
                                     @foreach($item['children'] as $child)
                                         <li>
                                             <a href="{{ $child['route'] }}"
-                                                class="submenu-item block px-4 py-2 rounded-lg text-sm transition-colors duration-200 {{ request()->url() == $child['route'] ? 'text-white font-medium bg-indigo-500' : 'text-slate-400 hover:text-white' }}">
+                                                class="submenu-item block px-4 py-2 rounded-lg text-sm transition-colors duration-200 {{ request()->fullUrl() == $child['route'] ? 'text-white font-medium' : 'text-slate-400 hover:text-white' }}">
                                                 {{ $child['label'] }}
                                             </a>
                                         </li>
@@ -635,10 +679,10 @@
                             {{-- Menu without Children --}}
                             <li class="group relative">
                                 <a href="{{ $item['route'] }}"
-                                    class="flex items-center px-2 py-2 rounded-lg transition-colors duration-200 {{ request()->routeIs($item['active_pattern']) ? 'bg-indigo-600 text-white shadow-md' : 'hover:bg-slate-800 hover:text-white' }}"
+                                    class="flex items-center px-2 py-2 rounded-lg transition-colors duration-200 {{ (request()->routeIs($item['active_pattern']) && (!isset($item['active_queries']) || empty(array_diff_assoc($item['active_queries'], request()->query())))) ? 'bg-indigo-500 text-white shadow-md' : 'hover:bg-slate-800 hover:text-white' }}"
                                     title="{{ $item['label'] }}">
                                     <div
-                                        class="w-5 h-5 min-w-[1.25rem] mr-3 {{ request()->routeIs($item['active_pattern']) ? 'text-white' : 'text-slate-500 group-hover:text-white' }}">
+                                        class="w-5 h-5 min-w-[1.25rem] mr-3 {{ (request()->routeIs($item['active_pattern']) && (!isset($item['active_queries']) || empty(array_diff_assoc($item['active_queries'], request()->query())))) ? 'text-white' : 'text-slate-500 group-hover:text-white' }}">
                                         {!! $item['icon'] !!}
                                     </div>
                                     <span class="sidebar-label whitespace-nowrap">{{ $item['label'] }}</span>
@@ -960,9 +1004,9 @@
 
                                                     // Send Update Request
                                                     const xhr = new XMLHttpRequest();
-                                                    xhr.open('POST', '{{ url("lp-admin/media") }}/' + mediaId); 
+                                                    xhr.open('POST', '{{ url("lp-admin/media") }}/' + mediaId);
                                                     xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
-                                                    
+
                                                     // CSRF Token
                                                     const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
                                                     if (token) {

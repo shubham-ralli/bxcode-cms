@@ -45,13 +45,28 @@ if (!function_exists('add_admin_menu')) {
     function add_admin_menu($label, $slug, $url, $icon = '', $order = 100)
     {
         // Auto-generate pattern from slug if URL looks internal
-        $pattern = 'admin.' . $slug . '*';
+        // Smart pattern detection for shared routes
+        if (strpos($url, 'admin/posts') !== false) {
+            $pattern = 'admin.posts*';
+        } elseif (strpos($url, 'admin/media') !== false) {
+            $pattern = 'admin.media*';
+        } else {
+            $pattern = 'admin.' . $slug . '*';
+        }
+
+        // Parse URL for query parameters
+        $active_queries = [];
+        $parsedUrl = parse_url($url);
+        if (isset($parsedUrl['query'])) {
+            parse_str($parsedUrl['query'], $active_queries);
+        }
 
         AdminMenuService::register($slug, [
             'label' => $label,
             'route' => $url,
             'icon' => $icon ?: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>',
             'active_pattern' => $pattern,
+            'active_queries' => $active_queries,
             'order' => $order
         ]);
     }

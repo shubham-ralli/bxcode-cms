@@ -4,7 +4,7 @@
 @section('header', 'Post Types')
 
 @section('header_actions')
-    <a href="{{ route('admin.post-types.create') }}"
+    <a href="{{ route('admin.acf.post-types.create') }}"
         class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow-sm text-sm font-medium">
         Add New
     </a>
@@ -13,7 +13,7 @@
 @section('content')
 
     <x-admin::admin-table :pagination="$postTypes" :counts="$counts" :status="$status" :search="$search"
-        route="admin.post-types.index" bulk-route="admin.post-types.bulk" bulk-action-name="action">
+        route="admin.acf.post-types.index" bulk-route="admin.acf.post-types.bulk" bulk-action-name="action">
         <x-slot:header>
             <th
                 class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-10">
@@ -39,7 +39,7 @@
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                     <div class="text-sm font-medium text-gray-900">
-                        <a href="{{ route('admin.post-types.edit', $type->id) }}" class="hover:text-indigo-600">
+                        <a href="{{ route('admin.acf.post-types.edit', $type->id) }}" class="hover:text-indigo-600">
                             {{ $type->plural_label }}
                         </a>
                     </div>
@@ -62,7 +62,7 @@
                     </div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
-                    <form action="{{ route('admin.post-types.toggle', $type->id) }}" method="POST">
+                    <form action="{{ route('admin.acf.post-types.toggle', $type->id) }}" method="POST">
                         @csrf
                         <button type="submit"
                             class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full cursor-pointer {{ $type->active ? 'bg-green-100 text-green-800 hover:bg-green-200' : 'bg-gray-100 text-gray-800 hover:bg-gray-200' }}">
@@ -71,17 +71,18 @@
                     </form>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <form action="{{ route('admin.post-types.toggle', $type->id) }}" method="POST" class="inline-block mr-3">
+                    <form action="{{ route('admin.acf.post-types.toggle', $type->id) }}" method="POST"
+                        class="inline-block mr-3">
                         @csrf
                         <button type="submit"
                             class="{{ $type->active ? 'text-amber-600 hover:text-amber-900' : 'text-green-600 hover:text-green-900' }}">
                             {{ $type->active ? 'Deactivate' : 'Activate' }}
                         </button>
                     </form>
-                    <a href="{{ route('admin.post-types.edit', $type->id) }}"
+                    <a href="{{ route('admin.acf.post-types.edit', $type->id) }}"
                         class="text-indigo-600 hover:text-indigo-900 mr-3">Edit</a>
                     {{-- Delete via Form (Single) --}}
-                    <form action="{{ route('admin.post-types.destroy', $type->id) }}" method="POST" class="inline-block"
+                    <form action="{{ route('admin.acf.post-types.destroy', $type->id) }}" method="POST" class="inline-block"
                         onsubmit="return confirm('Are you sure?');">
                         @csrf
                         @method('DELETE')
@@ -92,7 +93,7 @@
         @empty
             <tr>
                 <td colspan="5" class="px-6 py-4 text-center text-gray-500">
-                    No post types found. <a href="{{ route('admin.post-types.create') }}"
+                    No post types found. <a href="{{ route('admin.acf.post-types.create') }}"
                         class="text-indigo-600 hover:underline">Create one</a>.
                 </td>
             </tr>

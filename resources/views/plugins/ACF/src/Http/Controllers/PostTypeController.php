@@ -81,7 +81,7 @@ class PostTypeController extends Controller
 
         $postType = CustomPostType::create($validated);
 
-        return redirect()->route('admin.post-types.edit', $postType->id)->with('success', 'Post Type created successfully.');
+        return redirect()->route('admin.acf.post-types.edit', $postType->id)->with('success', 'Post Type created successfully.');
     }
 
     public function edit($id)
@@ -168,7 +168,7 @@ class PostTypeController extends Controller
 
         $postType->delete();
 
-        return redirect()->route('admin.post-types.index')->with('success', 'Post Type and associated posts deleted successfully.');
+        return redirect()->route('admin.acf.post-types.index')->with('success', 'Post Type and associated posts deleted successfully.');
     }
 
     public function toggleStatus($id)
@@ -199,15 +199,15 @@ class PostTypeController extends Controller
             }
 
             CustomPostType::destroy($ids);
-            return redirect()->route('admin.post-types.index')->with('success', 'Selected Post Types and associated posts deleted.');
+            return redirect()->route('admin.acf.post-types.index')->with('success', 'Selected Post Types and associated posts deleted.');
         } elseif ($action === 'activate') {
             CustomPostType::whereIn('id', $ids)->update(['active' => 1]);
-            return redirect()->route('admin.post-types.index')->with('success', 'Selected Post Types activated.');
+            return redirect()->route('admin.acf.post-types.index')->with('success', 'Selected Post Types activated.');
         } elseif ($action === 'deactivate') {
             CustomPostType::whereIn('id', $ids)->update(['active' => 0]);
-            return redirect()->route('admin.post-types.index')->with('success', 'Selected Post Types deactivated.');
+            return redirect()->route('admin.acf.post-types.index')->with('success', 'Selected Post Types deactivated.');
         }
 
-        return redirect()->route('admin.post-types.index')->with('error', 'Invalid action.');
+        return redirect()->route('admin.acf.post-types.index')->with('error', 'Invalid action.');
     }
 }
