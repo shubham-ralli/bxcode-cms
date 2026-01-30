@@ -110,10 +110,18 @@ class MediaController extends Controller
             ]);
 
             if ($request->expectsJson()) {
+                // If uploading from Media Library Grid, return the HTML for the new item
+                if ($request->has('return_html')) {
+                    $html = view('admin.media.partials.media-items', ['media' => [$media]])->render();
+                    return response()->json(['success' => true, 'html' => $html]);
+                }
+
                 return response()->json([
                     'success' => true,
                     'message' => 'Image uploaded successfully',
-                    'data' => $media
+                    'data' => $media,
+                    'location' => asset($media->path), // For TinyMCE compatibility if widely used
+                    'id' => $media->id
                 ]);
             }
 

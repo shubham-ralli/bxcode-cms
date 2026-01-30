@@ -5,7 +5,7 @@
             class="absolute top-2 left-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity bg-white rounded shadow">
             <input type="checkbox" value="{{ $item->id }}"
                 class="media-checkbox w-5 h-5 rounded text-indigo-600 focus:ring-indigo-500 m-1 cursor-pointer"
-                onchange="toggleBulkSelection()">
+                onchange="updateBulkUI()">
         </div>
 
         <!-- Media Item -->

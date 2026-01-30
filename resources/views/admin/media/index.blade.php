@@ -54,13 +54,10 @@
                     </svg>
                     Upload New
                 </button>
-                <form id="uploadForm" action="{{ route('admin.media.store') }}" method="POST" enctype="multipart/form-data"
-                    class="hidden">
-                    @csrf
-                    <input type="file" id="uploadInput" name="image"
-                        onchange="document.getElementById('uploadForm').submit()"
+                <div class="hidden">
+                    <input type="file" id="uploadInput" name="image" multiple onchange="handleFiles(this)"
                         accept="image/*,audio/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip">
-                </form>
+                </div>
             </div>
         </div>
 
@@ -436,6 +433,95 @@
             }).then(r => r.json()).then(d => {
                 if (d.success) window.location.reload();
             });
+        }
+
+        // Upload Handling
+        function handleFiles(input) {
+            const files = Array.from(input.files);
+            if (files.length === 0) return;
+
+            files.forEach(file => uploadFile(file));
+
+            // Clear input so same file can be selected again
+            input.value = '';
+        }
+
+        function uploadFile(file) {
+            // Create Placeholder ID
+            const tempId = 'upload-' + Math.random().toString(36).substr(2, 9);
+
+            // Generate Placeholder HTML
+            const placeholderHtml = `
+                        <div id="${tempId}" class="relative group aspect-square bg-white rounded-lg border border-indigo-100 shadow-sm p-2 flex flex-col items-center justify-center relative overflow-hidden">
+                           <!-- Icon -->
+                           <div class="mb-3 text-indigo-500">
+                                <svg class="w-8 h-8 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                           </div>
+                           <!-- Progress Bar -->
+                           <div class="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden mb-1">
+                                <div class="progress-bar bg-indigo-500 h-full rounded-full transition-all duration-200" style="width: 0%"></div>
+                           </div>
+                           <span class="text-[10px] text-gray-400 font-medium uppercase tracking-wide">Uploading...</span>
+
+                           <!-- Overlay for image preview if available -->
+                           ${file.type.startsWith('image/') ? `<img src="${URL.createObjectURL(file)}" class="absolute inset-0 w-full h-full object-cover opacity-20 -z-0">` : ''}
+                        </div>
+                    `;
+
+            // Prepend to Grid
+            const grid = document.getElementById('mediaGrid');
+            grid.insertAdjacentHTML('afterbegin', placeholderHtml);
+
+            const card = document.getElementById(tempId);
+            const progressBar = card.querySelector('.progress-bar');
+
+            // Form Data
+            const formData = new FormData();
+            formData.append('image', file);
+            formData.append('return_html', '1');
+
+            // XHR Upload
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', "{{ route('admin.media.store') }}", true);
+            xhr.setRequestHeader('X-CSRF-TOKEN', "{{ csrf_token() }}");
+            xhr.setRequestHeader('Accept', 'application/json');
+
+            xhr.upload.onprogress = function (e) {
+                if (e.lengthComputable) {
+                    const percentComplete = (e.loaded / e.total) * 100;
+                    progressBar.style.width = percentComplete + '%';
+                }
+            };
+
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    const data = JSON.parse(xhr.responseText);
+                    if (data.html) {
+                        card.outerHTML = data.html;
+                        // Re-bind listeners if needed (not needed since onclick is inline)
+                    } else {
+                        showError(card, 'Invalid Response');
+                    }
+                } else {
+                    showError(card, 'Upload Failed');
+                }
+            };
+
+            xhr.onerror = function () {
+                showError(card, 'Network Error');
+            };
+
+            xhr.send(formData);
+        }
+
+        function showError(card, message) {
+            card.innerHTML = `
+                        <div class="text-center text-red-500 p-2">
+                            <svg class="w-8 h-8 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <span class="text-[10px] font-bold block">${message}</span>
+                        </div>
+                    `;
+            setTimeout(() => card.remove(), 3000);
         }
 
     </script>
