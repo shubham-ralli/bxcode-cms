@@ -28,20 +28,22 @@
 
 
     <?php
+if (function_exists('get_field')) {
+    $data = get_field('ebook');
 
-$data = get_field('ebook');
+    if (function_exists('get_sub_field')) {
+        echo get_sub_field('ebook_1');
+        echo "<pre>";
+        print_r($data);
+        echo "</pre>";
+        echo get_sub_field('ebook_2');
+    }
+}
+    ?>
 
-echo get_sub_field('ebook_1');
-
-echo "<pre>";
-print_r($data);
-echo "</pre>";
-
-echo get_sub_field('ebook_2');
-
-?>
-
-    {{ get_sub_field('ebook_des_1') }}
+    @if(function_exists('get_sub_field'))
+        {{ get_sub_field('ebook_des_1') }}
+    @endif
 
 
     <div class="mt-8 pt-6 border-t font-medium text-indigo-600">

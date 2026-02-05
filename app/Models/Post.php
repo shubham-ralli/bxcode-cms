@@ -116,7 +116,7 @@ class Post extends Model
 
     public function seo()
     {
-        return $this->morphOne(SeoMeta::class, 'seoable');
+        return $this->morphOne(SeoMeta::class, 'seoable')->withDefault();
     }
 
     public function tags()

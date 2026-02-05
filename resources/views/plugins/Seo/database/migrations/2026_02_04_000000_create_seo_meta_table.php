@@ -21,9 +21,8 @@ return new class extends Migration {
                 $table->string('og_image')->nullable();
                 $table->boolean('is_noindex')->default(false);
                 $table->timestamps();
-
-                // Indexes
-                $table->index(['seoable_type', 'seoable_id']);
+                
+                // Redundant index removed
             });
         }
     }

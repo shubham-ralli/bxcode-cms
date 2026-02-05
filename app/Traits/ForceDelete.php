@@ -61,9 +61,22 @@ trait ForceDelete
 
         // 3. Final check
         if (file_exists($path)) {
-            // Last resort: Try to rename to a trash folder if delete fails (optional, but good for "hiding" it)
-            // For now, we will return false to indicate failure.
-            \Illuminate\Support\Facades\Log::error("ForceDelete: Failed to delete $path");
+            // Last resort: Try to rename to a trash folder
+            $trashDir = storage_path('framework/trash');
+
+            if (!file_exists($trashDir)) {
+                @mkdir($trashDir, 0777, true);
+            }
+
+            $trashName = basename($path) . '_' . time();
+            $trashPath = $trashDir . '/' . $trashName;
+
+            if (@rename($path, $trashPath)) {
+                \Illuminate\Support\Facades\Log::info("ForceDelete: Moved $path to $trashPath");
+                return true;
+            }
+
+            \Illuminate\Support\Facades\Log::error("ForceDelete: Failed to delete $path and failed to move to trash.");
             return false;
         }
 

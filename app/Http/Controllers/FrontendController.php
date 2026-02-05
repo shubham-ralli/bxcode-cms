@@ -43,6 +43,8 @@ class FrontendController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate($perPage);
 
+        $this->secureSeo($posts);
+
         $theme = get_active_theme();
 
         $view = null;
@@ -381,6 +383,8 @@ class FrontendController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate($perPage);
 
+        $this->secureSeo($posts);
+
         $theme = get_active_theme();
         $view = "themes.{$theme}.blog";
         View::share('currentTemplate', $view);
@@ -389,6 +393,8 @@ class FrontendController extends Controller
 
     private function renderPost($post, $isHome = false)
     {
+        $this->secureSeo($post);
+
         $template = new Template();
 
         $data = [
@@ -461,6 +467,8 @@ class FrontendController extends Controller
 
     private function renderArchive($posts, $title)
     {
+        $this->secureSeo($posts);
+
         $theme = get_active_theme();
 
         $view = "themes.{$theme}.archive";
@@ -478,5 +486,23 @@ class FrontendController extends Controller
             'posts' => $posts,
             'archiveTitle' => $title
         ]);
+    }
+
+    /**
+     * Prevents lazy loading crash if seo_meta table is missing
+     */
+    private function secureSeo($data)
+    {
+        if (Schema::hasTable('seo_meta')) {
+            return;
+        }
+
+        if ($data instanceof \Illuminate\Pagination\LengthAwarePaginator || $data instanceof \Illuminate\Support\Collection) {
+            foreach ($data as $post) {
+                $post->setRelation('seo', null);
+            }
+        } elseif ($data instanceof Post) {
+            $data->setRelation('seo', null);
+        }
     }
 }

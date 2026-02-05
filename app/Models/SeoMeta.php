@@ -19,7 +19,7 @@ class SeoMeta extends Model
         'meta_keywords',
         'canonical_url',
         'og_image',
-        'is_noindex',
+        'is_noindex'
     ];
 
     public function seoable()
