@@ -336,7 +336,7 @@
                     // Simple timeout to ensure UI is ready
                     setTimeout(() => {
                         selectMediaItem(preSelectId);
-                        
+
                         // Scroll to it
                         const newItem = document.querySelector(`.media-item[data-id="${preSelectId}"]`);
                         if (newItem) newItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -359,11 +359,11 @@
         // 2. Find and highlight the specific item by ID
         // Note: We use the ID to find the element reliably
         const container = document.querySelector(`.media-item[data-id="${id}"]`);
-        
+
         if (container) {
             // Add class to the outer container as requested
             container.classList.add('active-selection');
-            
+
             // Add ring to the inner visual element (aspect-square)
             const inner = container.querySelector('.aspect-square') || container.querySelector('.cursor-pointer > div');
             if (inner) {
@@ -373,7 +373,7 @@
 
         // 3. Update Sidebar Data
         const item = pickerData[id];
-        
+
         if (item) {
             // Ensure sidebar is visible
             const sidebar = document.getElementById('pickerSidebar');
@@ -381,7 +381,7 @@
 
             // Determine URL
             if (!url || url === '') {
-                pickerSelectedUrl = item.path;
+                pickerSelectedUrl = item.full_url || item.path;
             } else {
                 pickerSelectedUrl = url;
             }

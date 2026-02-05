@@ -61,9 +61,14 @@ class MediaController extends Controller
             ->get();
 
         if ($request->ajax()) {
+            $items = collect($media->items())->map(function ($item) {
+                $item->full_url = asset(ltrim($item->path, '/'));
+                return $item;
+            });
+
             return response()->json([
                 'html' => view('admin.media.partials.media-items', compact('media'))->render(),
-                'items' => $media->items(),
+                'items' => $items,
                 'next_page_url' => $media->nextPageUrl(),
                 'total' => $media->total(),
                 'first_item' => $media->firstItem(),
