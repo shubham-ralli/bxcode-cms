@@ -32,12 +32,21 @@
                             <input type="text" name="title" value="{{ $item->title }}"
                                 class="w-full text-sm border-gray-300 rounded-md p-2 border focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
                         </div>
-                        <div>
-                            <label
-                                class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">URL</label>
-                            <input type="text" name="url" value="{{ $item->url }}"
-                                class="w-full text-sm border-gray-300 rounded-md p-2 border focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
-                        </div>
+                        @if($item->type === 'custom')
+                            <div>
+                                <label
+                                    class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">URL</label>
+                                <input type="text" name="url" value="{{ $item->url }}"
+                                    class="w-full text-sm border-gray-300 rounded-md p-2 border focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+                            </div>
+                        @else
+                            <div>
+                                <label
+                                    class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">URL</label>
+                                <p class="text-sm text-gray-500 italic py-2">Dynamic (Linked to {{ $item->type }})</p>
+                                <input type="hidden" name="url" value="">
+                            </div>
+                        @endif
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
