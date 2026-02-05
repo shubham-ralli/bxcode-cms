@@ -13,6 +13,7 @@ class MenuItem extends Model
         'title',
         'url',
         'target',
+        'css_class',
         'type',
         'type_id'
     ];

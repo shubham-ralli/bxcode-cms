@@ -26,9 +26,50 @@ class MenuController extends Controller
             $menuItems = build_menu_tree($selectedMenu->items);
         }
 
-        // Get available items for sidebar (Pages, Posts, Custom Links)
-        $pages = Post::where('type', 'page')->where('status', 'publish')->get();
-        $posts = Post::where('type', 'post')->where('status', 'publish')->latest()->take(10)->get();
+        // Build Dynamic Accordions for Sidebar
+        $accordions = [];
+
+        // 1. Pages
+        $accordions[] = [
+            'label' => 'Pages',
+            'type' => 'page',
+            'items' => Post::where('type', 'page')->where('status', 'publish')->get()
+        ];
+
+        // 2. Posts
+        $accordions[] = [
+            'label' => 'Posts',
+            'type' => 'post',
+            'items' => Post::where('type', 'post')->where('status', 'publish')->latest()->take(20)->get()
+        ];
+
+        // 3. Custom Post Types
+        $cpts = \App\Models\CustomPostType::where('active', true)->get();
+        foreach ($cpts as $cpt) {
+            $accordions[] = [
+                'label' => $cpt->plural_label,
+                'type' => $cpt->key,
+                'items' => Post::where('type', $cpt->key)->where('status', 'publish')->latest()->take(20)->get()
+            ];
+        }
+
+        // 4. Taxonomies (Categories, Tags)
+        // Get distinct taxonomies from Tags table
+        $taxonomies = \App\Models\Tag::select('taxonomy')->distinct()->pluck('taxonomy');
+        foreach ($taxonomies as $tax) {
+            $label = ucfirst(str_replace('_', ' ', $tax));
+            if ($tax === 'category')
+                $label = 'Categories';
+            if ($tax === 'post_tag')
+                $label = 'Tags';
+
+            $accordions[] = [
+                'label' => $label,
+                'type' => 'taxonomy',
+                'taxonomy' => $tax, // Store taxonomy key for special handling if needed
+                'items' => \App\Models\Tag::where('taxonomy', $tax)->get()
+            ];
+        }
 
         // Get Menu Locations
         $locations = [
@@ -36,7 +77,7 @@ class MenuController extends Controller
             'footer' => \App\Models\Setting::get('menu_location_footer'),
         ];
 
-        return view('admin.menus.index', compact('menus', 'selectedMenu', 'menuItems', 'pages', 'posts', 'locations'));
+        return view('admin.menus.index', compact('menus', 'selectedMenu', 'menuItems', 'accordions', 'locations'));
     }
 
     public function store(Request $request)
@@ -44,12 +85,20 @@ class MenuController extends Controller
         $request->validate(['name' => 'required|string|max:255']);
         $slug = \Illuminate\Support\Str::slug($request->name);
 
-        Menu::create([
+        $menu = Menu::create([
             'name' => $request->name,
             'slug' => $slug
         ]);
 
-        return redirect()->route('admin.menus.index', ['menu' => Menu::where('slug', $slug)->first()->id])
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'menu' => $menu,
+                'message' => 'Menu created successfully.'
+            ]);
+        }
+
+        return redirect()->route('admin.menus.index', ['menu' => $menu->id])
             ->with('success', 'Menu created.');
     }
 

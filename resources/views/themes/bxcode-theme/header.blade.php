@@ -41,7 +41,7 @@
     'theme_location' => 'primary',
     'container' => false,
     'menu_class' => 'flex space-x-6',
-    'item_class' => 'text-gray-600 hover:text-indigo-600 font-medium transition-colors'
+    'item_class' => 'menu-link'
 ]) !!}
                 </nav>
 

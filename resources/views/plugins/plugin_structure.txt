@@ -55,8 +55,18 @@ It is automatically rolled back (`migrate:reset`) when the plugin is DELETED.
 4. src/ (Application Logic)
 ---------------------------
 Follow standard Laravel structure.
-- Namespace mappings are handled automatically if you stick to PSR-4 style relative to "Plugins\MyPlugin".
-- Example: `src/Http/Controllers/MyController.php` should have `namespace Plugins\MyPlugin\src\Http\Controllers;`
+- Namespace mappings are handled automatically.
+
+Best Practice:
+ALWAYS check if your custom tables exist before querying them in `functions.php`.
+This prevents crashes if the plugin is installed but migrations haven't run yet.
+
+Example:
+```php
+if (\Illuminate\Support\Facades\Schema::hasTable('my_custom_table')) {
+    // Register menus or routes based on table data
+}
+```
 
 5. Views
 --------
