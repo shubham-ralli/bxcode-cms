@@ -1,0 +1,74 @@
+PLUGIN STRUCTURE GUIDE
+======================
+This guide depicts the standard folder structure for a plugin (e.g., "MyPlugin") in this CMS.
+Follow this structure to ensure your plugin installs, activates, and functions correctly.
+
+ROOT DIRECTORY: resources/views/plugins/MyPlugin/
+
+FILE TREE OVERVIEW:
+-------------------
+MyPlugin/
+├── plugin.json                 # [REQUIRED] Plugin metadata (Name, Version, Author, Namespace)
+├── functions.php               # [REQUIRED] Main entry point. Registers routes, menus, and hooks.
+├── database/
+│   └── migrations/             # [OPTIONAL] Database migration files. Run on activation.
+│       └── 2026_01_01_000000_create_my_table.php
+├── src/                        # [OPTIONAL] PHP Classes (Controllers, Models, etc.)
+│   ├── Http/
+│   │   └── Controllers/
+│   │       └── MyController.php
+│   └── Models/
+│       └── MyModel.php
+└── views/ (or root views)      # [OPTIONAL] Blade templates
+    ├── index.blade.php
+    └── admin.blade.php
+
+------------------------------------------------------------------------------------------------
+
+DETAILED EXPLANATIONS:
+
+1. plugin.json (Metadata)
+--------------------------
+Defines who you are and what your plugin does.
+Example Content:
+{
+    "name": "My Custom Plugin",
+    "description": "Adds awesome features to the CMS.",
+    "version": "1.0.0",
+    "author": "Your Name",
+    "namespace": "Plugins\\MyPlugin"
+}
+
+2. functions.php (Boot Logic)
+------------------------------
+This is where you hook into the CMS.
+- Register Admin Menus: `add_admin_menu('My Plugin', 'my-plugin', url('lp-admin/my-plugin'), ...)`
+- Register Routes: `add_plugin_admin_route(...)`
+- Register Shortcodes/Helpers: `if (!function_exists('my_helper')) { ... }`
+
+3. database/migrations/ (Database Schema)
+----------------------------------------
+Any file here is automatically run (`php artisan migrate`) when the plugin is ACTIVATED.
+It is automatically rolled back (`migrate:reset`) when the plugin is DELETED.
+*Tip: Always check `!Schema::hasTable(...)` in `up()` to prevent crashes if table exists.*
+
+4. src/ (Application Logic)
+---------------------------
+Follow standard Laravel structure.
+- Namespace mappings are handled automatically if you stick to PSR-4 style relative to "Plugins\MyPlugin".
+- Example: `src/Http/Controllers/MyController.php` should have `namespace Plugins\MyPlugin\src\Http\Controllers;`
+
+5. Views
+--------
+You can place blade files anywhere in the plugin folder.
+To render a view from a controller:
+`return plugin_view('MyPlugin::index', $data);`
+(Where 'index' maps to `resources/views/plugins/MyPlugin/index.blade.php`)
+
+------------------------------------------------------------------------------------------------
+
+EXAMPLE WORKFLOW:
+1. Create folder `resources/views/plugins/MyNewPlugin`.
+2. Add `plugin.json`.
+3. Add `functions.php` and register a test route/menu.
+4. Go to Admin -> Plugins and click "Activate".
