@@ -1,0 +1,7 @@
+{
+    "name": "Advanced Custom Fields",
+    "description": "Create powerful custom field groups for your posts and pages.",
+    "version": "1.0.1",
+    "author": "BxCode CMS",
+    "namespace": "Plugins\\ACF"
+}

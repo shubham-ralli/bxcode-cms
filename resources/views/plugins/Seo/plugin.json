@@ -1,0 +1,7 @@
+{
+    "name": "SEO Manager",
+    "description": "Complete SEO solution with meta tags, sitemaps, robots.txt, and search appearance settings",
+    "version": "1.0.0",
+    "author": "BxCode CMS",
+    "namespace": "Plugins\\Seo"
+}
