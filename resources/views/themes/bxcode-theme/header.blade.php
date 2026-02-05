@@ -25,36 +25,28 @@
     @include('partials.admin-bar')
 
     <!-- Site Header -->
-    <header class="bg-white border-b border-gray-200">
-        <div class="container mx-auto px-4">
-            <div class="flex items-center justify-between h-16">
-                <!-- Logo / Site Title -->
-                <div class="flex-shrink-0">
-                    <a href="{{ url('/') }}" class="text-xl font-bold text-indigo-600">
-                        {{ get_setting('site_title', 'BxCode') }}
-                    </a>
-                </div>
+    <header class="site-header">
+        <div class="container header-container">
+            <!-- Logo / Site Title -->
+            <div class="site-branding">
+                <a href="{{ url('/') }}">
+                    {{ get_setting('site_title', 'BxCode') }}
+                </a>
+            </div>
 
-                <!-- Desktop Navigation -->
-                <nav class="hidden md:block">
-                    {!! wp_nav_menu([
+            <!-- Desktop Navigation -->
+            <nav class="main-navigation">
+                {!! wp_nav_menu([
     'theme_location' => 'primary',
     'container' => false,
-    'menu_class' => 'flex space-x-6',
+    'menu_class' => 'menu', // Use standard 'menu' class styled in style.css
     'item_class' => 'menu-link'
 ]) !!}
-                </nav>
+            </nav>
 
-                <!-- Mobile Menu Button (Hamburger) -->
-                <div class="md:hidden">
-                    <button type="button"
-                        class="text-gray-500 hover:text-gray-600 focus:outline-none focus:text-gray-600">
-                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M4 6h16M4 12h16M4 18h16"></path>
-                        </svg>
-                    </button>
-                </div>
+            <!-- Mobile Toggle (Hidden by default in CSS, shown in media query if needed) -->
+            <div class="mobile-menu-toggle" style="display: none;">
+                <button>Menu</button>
             </div>
         </div>
     </header>

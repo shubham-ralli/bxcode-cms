@@ -260,7 +260,7 @@ function walk_nav_menu_tree($items, $args)
             $classes[] = $item->css_class;
         }
 
-        if (!empty($item->children)) {
+        if (count($item->children) > 0) {
             $classes[] = 'menu-item-has-children';
         }
 
@@ -296,7 +296,7 @@ function walk_nav_menu_tree($items, $args)
 
         $html .= '<a href="' . esc_attr($url) . '"' . $target . $link_class . '>' . e($item->title) . '</a>';
 
-        if (!empty($item->children)) {
+        if (count($item->children) > 0) {
             $html .= '<ul class="sub-menu">';
             $html .= walk_nav_menu_tree($item->children, $args);
             $html .= '</ul>';

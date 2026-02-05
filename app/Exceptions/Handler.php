@@ -27,6 +27,20 @@ class Handler extends ExceptionHandler
             if ($request->is('lp-admin/*') || $request->is('lp-admin')) {
                 return response()->view('admin.errors.admin_404', [], 404);
             }
+
+            // Frontend Theme 404
+            if (function_exists('get_active_theme')) {
+                $theme = get_active_theme();
+                // Load theme functions just in case 404 view needs them
+                if (function_exists('load_theme_functions')) {
+                    load_theme_functions();
+                }
+
+                $view = "themes.{$theme}.404";
+                if (view()->exists($view)) {
+                    return response()->view($view, [], 404);
+                }
+            }
         });
     }
 }
