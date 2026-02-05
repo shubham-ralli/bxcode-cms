@@ -24,29 +24,26 @@
     class="{{ body_class($bodyClass ?? '') }} bg-gray-50 flex flex-col min-h-screen">
     @include('partials.admin-bar')
 
-    <!-- Site Header -->
-    <header class="site-header">
-        <div class="container header-container">
-            <!-- Logo / Site Title -->
-            <div class="site-branding">
-                <a href="{{ url('/') }}">
-                    {{ get_setting('site_title', 'BxCode') }}
-                </a>
-            </div>
 
-            <!-- Desktop Navigation -->
-            <nav class="main-navigation">
-                {!! wp_nav_menu([
+    <header class="site-header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="{{ url('/') }}">
+                        <span class="logo-text">{{ get_setting('site_title', 'BxCode') }}</span>
+                    </a>
+                    <span class="page-subtitle">{{ get_setting('tagline', '') }}</span>
+                </div>
+
+                <nav class="main-nav">
+                    {!! wp_nav_menu([
     'theme_location' => 'primary',
     'container' => false,
-    'menu_class' => 'menu', // Use standard 'menu' class styled in style.css
+    'menu_class' => 'nav-list',
     'item_class' => 'menu-link'
 ]) !!}
-            </nav>
+                </nav>
 
-            <!-- Mobile Toggle (Hidden by default in CSS, shown in media query if needed) -->
-            <div class="mobile-menu-toggle" style="display: none;">
-                <button>Menu</button>
             </div>
         </div>
     </header>

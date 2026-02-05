@@ -253,6 +253,8 @@ function walk_nav_menu_tree($items, $args)
     foreach ($items as $item) {
         $classes = [];
         $classes[] = 'menu-item';
+        $classes[] = 'nav-item'; // Added standard class
+
         $classes[] = 'menu-item-' . $item->id;
         $classes[] = 'menu-item-type-' . ($item->type ?? 'custom');
 
@@ -262,23 +264,19 @@ function walk_nav_menu_tree($items, $args)
 
         if (count($item->children) > 0) {
             $classes[] = 'menu-item-has-children';
+
+            // Add 'dropdown' if it's a top-level parent (parent_id is null/0)
+            if (empty($item->parent_id)) {
+                $classes[] = 'dropdown';
+            } else {
+                // For nested dropdowns
+                $classes[] = 'dropdown-submenu';
+            }
         }
 
         // Add user-provided item_class from args if exists
         if (!empty($args['item_class'])) {
-            $classes[] = $args['item_class']; // Be careful, this applies to ALL items. User might want it on <a> or <li>. WP puts 'menu_class' on UL, 'item_class' isn't standard WP but let's leave it if it was there? 
-            // Actually, in the code I read, $args['item_class'] was passed in header-v2.
-            // But looking at lines 40-45 of header-v2: 'item_class' => 'text-gray-600...'
-            // The original code DID NOT use $args['item_class'] inside the walker! 
-            // Wait, I should check if I missed it.
-            // The original code I read (lines 250-275) did NOT use $args['item_class'].
-            // However, header-v2 PASSES 'item_class'. 
-            // So currently 'item_class' does NOTHING.
-            // I should probably apply it to the <a> tag, or the <li> tag? 
-            // In Tailwind menus, usually classes are on the <a>.
-            // But the user asked for "menu i add class but theme wp_nav_menu not show".
-            // This refers to the DB column 'css_class'.
-            // I will focus on user request first.
+            // Note: This applies to ALL items. User might want it on <a> or <li>. 
         }
 
         $class_names = join(' ', array_filter($classes));
@@ -291,13 +289,23 @@ function walk_nav_menu_tree($items, $args)
         // Handle target attribute
         $target = !empty($item->target) ? ' target="' . esc_attr($item->target) . '"' : '';
 
-        // Apply generic item_class to the link if provided (common pattern for Tailwind)
-        $link_class = !empty($args['item_class']) ? ' class="' . esc_attr($args['item_class']) . '"' : '';
+        // Build Link Classes
+        $link_classes = ['nav-link']; // Always add standard nav-link class
+        if (!empty($args['item_class'])) {
+            $link_classes[] = $args['item_class'];
+        }
 
-        $html .= '<a href="' . esc_attr($url) . '"' . $target . $link_class . '>' . e($item->title) . '</a>';
+        $link_class_attr = ' class="' . esc_attr(implode(' ', array_unique($link_classes))) . '"';
+
+        $html .= '<a href="' . esc_attr($url) . '"' . $target . $link_class_attr . '>' . e($item->title);
+
+        // Add toggle icon if needed? For now just title.
+        // If specific toggle icon is needed (like <span class="dropdown-icon">▾</span>), it can be handled via CSS ::after on .dropdown > a
+        $html .= '</a>';
 
         if (count($item->children) > 0) {
-            $html .= '<ul class="sub-menu">';
+            // Use 'dropdown-menu' class instead of 'sub-menu'
+            $html .= '<ul class="dropdown-menu">';
             $html .= walk_nav_menu_tree($item->children, $args);
             $html .= '</ul>';
         }

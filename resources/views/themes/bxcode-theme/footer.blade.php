@@ -1,8 +1,16 @@
-<footer class="bg-gray-800 text-white py-6 mt-12">
-    <div class="container mx-auto px-4 text-center">
-        &copy; {{ date('Y') }} {{ \App\Models\Setting::get('site_title', 'BxCode CMS') }}. All rights reserved.
+<footer class="site-footer">
+    <div class="container">
+        <div class="footer-bottom">
+            <p>&copy; {{ date('Y') }} {{ \App\Models\Setting::get('site_title', 'BxCode CMS') }}. All rights reserved.
+            </p>
+            <div class="footer-legal">
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Service</a>
+            </div>
+        </div>
     </div>
 </footer>
+
 {!! wp_footer() !!}
 </body>
 
