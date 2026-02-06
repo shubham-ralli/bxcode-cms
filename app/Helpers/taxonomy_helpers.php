@@ -4,13 +4,13 @@
  * Simplified and working version
  */
 
-global $wp_taxonomies;
-$wp_taxonomies = [];
+global $bx_taxonomies;
+$bx_taxonomies = [];
 
 if (!function_exists('register_taxonomy')) {
     function register_taxonomy($taxonomy, $post_types, $args = [])
     {
-        global $wp_taxonomies;
+        global $bx_taxonomies;
 
         $post_types = (array) $post_types;
 
@@ -23,7 +23,7 @@ if (!function_exists('register_taxonomy')) {
 
         $args = array_merge($defaults, $args);
 
-        $wp_taxonomies[$taxonomy] = [
+        $bx_taxonomies[$taxonomy] = [
             'name' => $taxonomy,
             'post_types' => $post_types,
             'args' => $args
@@ -49,14 +49,14 @@ if (!function_exists('register_taxonomy')) {
 if (!function_exists('get_taxonomies')) {
     function get_taxonomies($post_type = null)
     {
-        global $wp_taxonomies;
+        global $bx_taxonomies;
 
         if ($post_type === null) {
-            return array_keys($wp_taxonomies);
+            return array_keys($bx_taxonomies);
         }
 
         $result = [];
-        foreach ($wp_taxonomies as $taxonomy => $data) {
+        foreach ($bx_taxonomies as $taxonomy => $data) {
             if (in_array($post_type, $data['post_types'])) {
                 $result[] = $taxonomy;
             }
@@ -69,8 +69,8 @@ if (!function_exists('get_taxonomies')) {
 if (!function_exists('taxonomy_exists')) {
     function taxonomy_exists($taxonomy)
     {
-        global $wp_taxonomies;
-        return isset($wp_taxonomies[$taxonomy]);
+        global $bx_taxonomies;
+        return isset($bx_taxonomies[$taxonomy]);
     }
 }
 

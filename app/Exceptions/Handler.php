@@ -24,7 +24,7 @@ class Handler extends ExceptionHandler
     public function register(): void
     {
         $this->renderable(function (\Symfony\Component\HttpKernel\Exception\NotFoundHttpException $e, $request) {
-            if ($request->is('lp-admin/*') || $request->is('lp-admin')) {
+            if ($request->is(get_admin_prefix() . '/*') || $request->is(get_admin_prefix())) {
                 return response()->view('admin.errors.admin_404', [], 404);
             }
 

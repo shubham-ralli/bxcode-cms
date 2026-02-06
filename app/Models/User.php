@@ -63,7 +63,12 @@ class User extends Authenticatable
 
     public function getAvatarUrlAttribute()
     {
-        return $this->profileImage ? asset($this->profileImage->path) : null;
+        if ($this->profileImage) {
+            return asset($this->profileImage->path);
+        }
+
+        // Fallback to UI Avatars
+        return 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&background=random&color=fff';
     }
 
     public function getInitialsAttribute()

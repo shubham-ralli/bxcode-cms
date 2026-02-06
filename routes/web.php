@@ -16,7 +16,13 @@ use Illuminate\Support\Facades\Route;
 Route::get('/install', [App\Http\Controllers\InstallController::class, 'index'])->name('install.index');
 Route::post('/install', [App\Http\Controllers\InstallController::class, 'store'])->name('install.store');
 
-Route::prefix('lp-admin')->group(function () {
+Route::get('/install', [App\Http\Controllers\InstallController::class, 'index'])->name('install.index');
+Route::post('/install', [App\Http\Controllers\InstallController::class, 'store'])->name('install.store');
+
+Route::middleware('auth')->get('/Customize', [App\Http\Controllers\CustomizeController::class, 'index'])->name('admin.customize');
+Route::middleware('auth')->post('/Customize/save', [App\Http\Controllers\CustomizeController::class, 'save'])->name('admin.customize.save');
+
+Route::prefix(get_admin_prefix())->group(function () {
     Route::get('login', [App\Http\Controllers\AdminAuthController::class, 'login'])->name('login');
     Route::post('login', [App\Http\Controllers\AdminAuthController::class, 'authenticate']);
     Route::post('logout', [App\Http\Controllers\AdminAuthController::class, 'logout'])->name('logout');

@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\View;
 use App\Services\ShortcodeService;
 
+
+
 if (!function_exists('add_shortcode')) {
     /**
      * Add a new shortcode.
@@ -34,10 +36,18 @@ if (!function_exists('load_theme_functions')) {
     function load_theme_functions()
     {
         $activeTheme = get_active_theme();
-        $path = resource_path("views/themes/{$activeTheme}/functions.blade.php");
 
-        if (file_exists($path)) {
-            require_once $path;
+        // Check for functions.php (Standard PHP)
+        $phpPath = resource_path("views/themes/{$activeTheme}/functions.php");
+        if (file_exists($phpPath)) {
+            require_once $phpPath;
+            return;
+        }
+
+        // Check for functions.blade.php (Blade supported)
+        $bladePath = resource_path("views/themes/{$activeTheme}/functions.blade.php");
+        if (file_exists($bladePath)) {
+            require_once $bladePath;
         }
     }
 }
@@ -141,12 +151,12 @@ if (!function_exists('shortcode_parse_atts')) {
     }
 }
 
-if (!function_exists('wp_nav_menu')) {
+if (!function_exists('bx_nav_menu')) {
     /**
      * Display a navigation menu.
      * @param array $args
      */
-    function wp_nav_menu($args = [])
+    function bx_nav_menu($args = [])
     {
         $defaults = [
             'menu' => '', // Menu name, slug, or ID
@@ -351,3 +361,118 @@ if (!function_exists('esc_attr')) {
         return htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
     }
 }
+
+if (!function_exists('get_stylesheet_directory_uri')) {
+    function get_stylesheet_directory_uri()
+    {
+        return get_theme_file_uri();
+    }
+}
+
+if (!function_exists('bx_enqueue_style')) {
+    function bx_enqueue_style($handle, $src = '', $deps = [], $ver = false, $media = 'all')
+    {
+        \App\Services\AssetService::enqueueStyle($handle, $src, $deps, $ver, $media);
+    }
+}
+
+if (!function_exists('wp_enqueue_style')) {
+    function wp_enqueue_style($handle, $src = '', $deps = [], $ver = false, $media = 'all')
+    {
+        bx_enqueue_style($handle, $src, $deps, $ver, $media);
+    }
+}
+
+if (!function_exists('bx_enqueue_script')) {
+    function bx_enqueue_script($handle, $src = '', $deps = [], $ver = false, $in_footer = false)
+    {
+        \App\Services\AssetService::enqueueScript($handle, $src, $deps, $ver, $in_footer);
+    }
+}
+
+if (!function_exists('wp_enqueue_script')) {
+    function wp_enqueue_script($handle, $src = '', $deps = [], $ver = false, $in_footer = false)
+    {
+        bx_enqueue_script($handle, $src, $deps, $ver, $in_footer);
+    }
+}
+
+if (!function_exists('bx_posts_pagination')) {
+    /**
+     * Display previous/next post pagination buttons with Pretty URLs.
+     *
+     * @param \Illuminate\Pagination\LengthAwarePaginator|null $posts
+     */
+    function bx_posts_pagination($posts = null)
+    {
+        if (!$posts) {
+            $posts = \Illuminate\Support\Facades\View::shared('posts');
+        }
+
+        if (!$posts instanceof \Illuminate\Pagination\LengthAwarePaginator || !$posts->hasPages()) {
+            return;
+        }
+
+        echo '<div class="bx-pagination mt-8 flex justify-between items-center">';
+
+        $currentPage = $posts->currentPage();
+        $lastPage = $posts->lastPage();
+
+        // Get Base URL (Current URL without query strings and without /page/n)
+        $currentUrl = url()->current();
+
+        // If current URL ends with /page/{n}, strip it
+        if (preg_match('/(.*)\/page\/\d+$/', $currentUrl, $matches)) {
+            $baseUrl = $matches[1];
+        } else {
+            $baseUrl = $currentUrl;
+        }
+
+        // --- Previous Link ---
+        if ($posts->onFirstPage()) {
+            echo '<span class="px-4 py-2 border border-gray-300 text-gray-400 rounded cursor-not-allowed">Previous</span>';
+        } else {
+            // Logic: If prev page is 1, link to base URL. Else link to /page/{prev}
+            $prevPage = $currentPage - 1;
+            if ($prevPage == 1) {
+                $prevUrl = $baseUrl;
+            } else {
+                $prevUrl = $baseUrl . '/page/' . $prevPage;
+            }
+            echo '<a href="' . $prevUrl . '" class="px-4 py-2 border border-blue-600 text-blue-600 rounded hover:bg-blue-50 transition">Previous</a>';
+        }
+
+        // --- Next Link ---
+        if ($posts->hasMorePages()) {
+            $nextUrl = $baseUrl . '/page/' . ($currentPage + 1);
+            echo '<a href="' . $nextUrl . '" class="px-4 py-2 border border-blue-600 text-blue-600 rounded hover:bg-blue-50 transition">Next</a>';
+        } else {
+            echo '<span class="px-4 py-2 border border-gray-300 text-gray-400 rounded cursor-not-allowed">Next</span>';
+        }
+
+        echo '</div>';
+    }
+}
+
+/*
+add_action('bx_head', function () {
+    // 1. Trigger Enqueue Hook so themes can register scripts
+    do_action('bx_enqueue_scripts');
+    do_action('wp_enqueue_scripts'); // Alias support
+
+    // 2. Print Styles
+    if (class_exists('App\Services\AssetService')) {
+        \App\Services\AssetService::printStyles();
+        \App\Services\AssetService::printHeadScripts();
+    }
+}, 1);
+*/
+
+/*
+add_action('bx_footer', function () {
+    // Print Footer Scripts
+    if (class_exists('App\Services\AssetService')) {
+        \App\Services\AssetService::printFooterScripts();
+    }
+}, 20);
+*/

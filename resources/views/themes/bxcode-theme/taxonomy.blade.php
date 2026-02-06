@@ -3,8 +3,10 @@
 <section class="category-header">
     <div class="container">
         <div class="category-title-section">
-            <h1 class="category-title">{{ $archiveTitle ?? get_setting('site_title') }}</h1>
-            <p class="category-description">Exploring innovation, digital transformation, and the future of tech</p>
+            <h1 class="category-title">{{ $tag->name }}</h1>
+            @if($tag->description)
+                <p class="category-description">{{ $tag->description }}</p>
+            @endif
         </div>
     </div>
 </section>

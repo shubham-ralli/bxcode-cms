@@ -1,7 +1,7 @@
 <footer class="site-footer">
     <div class="container">
         <div class="footer-bottom">
-            <p>&copy; {{ date('Y') }} {{ \App\Models\Setting::get('site_title', 'BxCode CMS') }}. All rights reserved.
+            <p>&copy; {{ date('Y') }} {{ get_setting('site_title', 'BxCode CMS') }}. All rights reserved.
             </p>
             <div class="footer-legal">
                 <a href="#">Privacy Policy</a>
@@ -11,7 +11,7 @@
     </div>
 </footer>
 
-{!! wp_footer() !!}
+{!! bx_footer() !!}
 </body>
 
 </html>

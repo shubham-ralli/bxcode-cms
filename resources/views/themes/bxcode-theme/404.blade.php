@@ -1,4 +1,4 @@
-{!! get_header(null, ['bodyClass' => 'error404']) !!}
+{!! get_header() !!}
 
 <div class="container py-20 px-4 text-center">
     <div class="error-404">

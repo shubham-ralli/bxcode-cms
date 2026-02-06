@@ -136,4 +136,16 @@ class Post extends Model
     {
         return $this->belongsToMany(Tag::class);
     }
+    public function getReadTimeAttribute()
+    {
+        $content = strip_tags($this->content);
+        $wordCount = str_word_count($content);
+        $minutes = ceil($wordCount / 200); // Average reading speed: 200 wpm
+
+        if ($minutes < 1) {
+            return '1 min read';
+        }
+
+        return $minutes . ' min read';
+    }
 }

@@ -20,7 +20,7 @@ class AdminAuthController extends Controller
 
         if (\Auth::attempt($credentials)) {
             $request->session()->regenerate();
-            return redirect()->intended('lp-admin');
+            return redirect()->intended(get_admin_prefix());
         }
 
         return back()->withErrors([

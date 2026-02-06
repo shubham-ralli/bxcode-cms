@@ -109,7 +109,7 @@ if (!function_exists('add_admin_menu')) {
         $name = $name ?: 'admin.' . str_replace('/', '.', $path);
 
         \Illuminate\Support\Facades\Route::middleware(['web', 'auth'])
-            ->prefix('lp-admin')
+            ->prefix(get_admin_prefix())
             ->match($methods, $path, $callback)
             ->name($name);
     }

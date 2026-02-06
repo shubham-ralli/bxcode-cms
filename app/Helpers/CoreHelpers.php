@@ -33,25 +33,25 @@ if (!function_exists('get_theme_file_uri')) {
     }
 }
 
-if (!function_exists('wp_head')) {
+if (!function_exists('bx_head')) {
     /**
      * Render system head scripts/styles.
      * @return \Illuminate\Contracts\View\View
      */
-    function wp_head()
+    function bx_head()
     {
-        return View::make('partials.wp_head');
+        return View::make('partials.bx_head');
     }
 }
 
-if (!function_exists('wp_footer')) {
+if (!function_exists('bx_footer')) {
     /**
      * Render system footer scripts/styles.
      * @return \Illuminate\Contracts\View\View
      */
-    function wp_footer()
+    function bx_footer()
     {
-        return View::make('partials.wp_footer');
+        return View::make('partials.bx_footer');
     }
 }
 
@@ -213,7 +213,40 @@ if (!function_exists('get_setting')) {
 }
 
 
+if (!function_exists('get_media')) {
+    /**
+     * Get media object by ID.
+     * @param int|null $id
+     * @return \App\Models\Media|null
+     */
+    function get_media($id)
+    {
+        if (!$id)
+            return null;
+        if (class_exists('App\Models\Media')) {
+            return \App\Models\Media::find($id);
+        }
+        return null;
+    }
+}
 
 
 
-
+if (!function_exists('get_admin_prefix')) {
+    /**
+     * Get the Admin Panel URL prefix.
+     * @return string
+     */
+    function get_admin_prefix()
+    {
+        // Avoid infinite loop if database is missing during install
+        try {
+            if (class_exists('App\Models\Setting')) {
+                return \App\Models\Setting::get('admin_path', config('cms.admin_path', 'bx-admin'));
+            }
+        } catch (\Exception $e) {
+            // Fallback if DB connection fails
+        }
+        return config('cms.admin_path', 'bx-admin');
+    }
+}

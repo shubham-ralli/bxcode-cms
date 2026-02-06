@@ -1,6 +1,6 @@
 <?php
 // Check for Admin Panel 404
-if (request()->is('lp-admin*')) {
+if (request()->is(get_admin_prefix() . '*')) {
     if (view()->exists('admin.errors.admin_404')) {
         echo view('admin.errors.admin_404')->render();
         exit;

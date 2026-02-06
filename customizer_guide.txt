@@ -1,0 +1,37 @@
+HOW TO ADD CUSTOM CUSTOMIZER SECTIONS
+=======================================
+
+You can add new sections and controls to the Customizer from your theme's `functions.php` file.
+
+1. Locate or create your theme functions file:
+   /resources/views/themes/{your-theme}/functions.php
+
+2. Use the `customize_register` hook:
+
+   add_action('customize_register', function($customizer) {
+       
+       // 1. Add a Section
+       $customizer->addSection('my_section_id', [
+           'title'    => 'My New Section',
+           'priority' => 30, // Lower number = higher up
+           'description' => 'Optional description.'
+       ]);
+
+       // 2. Add Controls to that Section
+       $customizer->addControl('my_setting_key', [
+           'label'   => 'My Text Setting',
+           'section' => 'my_section_id', // Must match section ID above
+           'type'    => 'text', // text, textarea, select
+           'default' => 'Default Value'
+       ]);
+
+   });
+
+3. Access the value in your blade templates:
+   
+   {{ \App\Models\Setting::get('my_setting_key', 'Default Value') }}
+
+4. Supported Control Types:
+   - text
+   - textarea
+   - select (provide 'choices' => ['key' => 'label'])

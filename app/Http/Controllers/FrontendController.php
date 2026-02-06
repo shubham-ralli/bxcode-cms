@@ -98,6 +98,30 @@ class FrontendController extends Controller
             load_theme_functions();
         }
 
+        // --- Pretty Pagination Logic ---
+        // Check if slug ends with /page/{n}
+        if ($slug && preg_match('/(.*)\/page\/(\d+)$/', $slug, $matches)) {
+            $baseSlug = $matches[1];
+            $pageNumber = (int) $matches[2];
+
+            // 1. Force Paginator to use this page
+            \Illuminate\Pagination\Paginator::currentPageResolver(function () use ($pageNumber) {
+                return $pageNumber;
+            });
+
+            // 2. Pretend the slug is just the base slug (without /page/n)
+            $slug = $baseSlug;
+        }
+        // Handle root pagination (e.g. /page/2 for homepage)
+        elseif ($slug && preg_match('/^page\/(\d+)$/', $slug, $matches)) {
+            $pageNumber = (int) $matches[1];
+            \Illuminate\Pagination\Paginator::currentPageResolver(function () use ($pageNumber) {
+                return $pageNumber;
+            });
+            $slug = null; // Treat as homepage
+        }
+        // -------------------------------
+
         $showOnFront = Setting::get('show_on_front', 'posts');
         $pageOnFront = Setting::get('page_on_front');
         $pageForPosts = Setting::get('page_for_posts');
@@ -249,7 +273,7 @@ class FrontendController extends Controller
                     ->orderBy('created_at', 'desc')
                     ->paginate(Setting::get('posts_per_page', 10));
 
-                return $this->renderArchive($posts, $cpt->plural_label);
+                return $this->renderArchive($posts, $cpt->plural_label, $cpt->key);
             }
         }
 
@@ -429,30 +453,18 @@ class FrontendController extends Controller
             $view = "themes.{$theme}.index";
         } elseif ($post->template && $post->template !== 'default') {
             $view = "themes.{$theme}.{$post->template}";
-        } elseif ($post->type === 'post') {
-            $view = "themes.{$theme}.post";
         } elseif ($post->type === 'page') {
             $view = "themes.{$theme}.page";
         } else {
-            // Unify CPT Logic
-            // 1. Check for specific CPT template: themes.{theme}.{type}
-            $cptView = "themes.{$theme}.{$post->type}";
-            if (view()->exists($cptView)) {
-                $view = $cptView;
-            } else {
-                // 2. Fallback based on CPT capability_type
-                $cpt = DB::table('custom_post_types')->where('key', $post->type)->first();
-                if ($cpt) {
-                    $settings = json_decode($cpt->settings, true) ?? [];
-                    // Default to 'post' as it's the standard behavior for CPTs
-                    $capability = $settings['capability_type'] ?? 'post';
-
-                    if ($capability === 'page') {
-                        $view = "themes.{$theme}.page";
-                    } else {
-                        // Default/Post behavior
-                        $view = "themes.{$theme}.post";
-                    }
+            // For Post and CPTs: Use 'single' hierarchy
+            // 1. single-{type}.blade.php
+            $view = "themes.{$theme}.single-{$post->type}";
+            if (!view()->exists($view)) {
+                // 2. single.blade.php
+                $view = "themes.{$theme}.single";
+                if (!view()->exists($view)) {
+                    // 3. Fallback to index
+                    $view = "themes.{$theme}.index";
                 }
             }
         }
@@ -465,17 +477,25 @@ class FrontendController extends Controller
         return view('frontend.page', compact('content', 'post'));
     }
 
-    private function renderArchive($posts, $title)
+    private function renderArchive($posts, $title, $postType = 'post')
     {
         $this->secureSeo($posts);
 
         $theme = get_active_theme();
 
-        $view = "themes.{$theme}.archive";
+        // 1. Try Specific Archive: themes.{theme}.archive-{post_type}
+        $view = "themes.{$theme}.archive-{$postType}";
+
         if (!view()->exists($view)) {
-            $view = "themes.{$theme}.blog";
+            // 2. Generic Archive
+            $view = "themes.{$theme}.archive";
             if (!view()->exists($view)) {
-                $view = "themes.{$theme}.index";
+                // 3. Blog Fallback
+                $view = "themes.{$theme}.blog";
+                if (!view()->exists($view)) {
+                    // 4. Index Fallback
+                    $view = "themes.{$theme}.index";
+                }
             }
         }
 

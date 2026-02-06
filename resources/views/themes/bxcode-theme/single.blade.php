@@ -18,10 +18,9 @@
             @endif
 
             <div class="article-author">
-                <img src="https://i.pravatar.cc/100?img=12" alt="Author" class="author-avatar">
+                <img src="{{ $post->author->avatar_url }}" alt="Author" class="author-avatar">
                 <div class="author-info">
-                    <div class="author-name">Sarah Mitchell</div>
-                    <div class="author-bio">Technology & Culture Writer</div>
+                    <div class="author-name">{{ $post->author->display_name ?? $post->author->name ?? 'Author' }}</div>
                 </div>
             </div>
         </div>
@@ -47,17 +46,12 @@
 
             <!-- Author Card -->
             <div class="author-card">
-                <img src="https://i.pravatar.cc/150?img=12" alt="Sarah Mitchell" class="author-card-avatar">
+                <img src="{{ $post->author->avatar_url }}" alt="{{ $post->author->display_name ?? 'Author' }}"
+                    class="author-card-avatar">
                 <div class="author-card-content">
-                    <h3 class="author-card-name">Sarah Mitchell</h3>
-                    <p class="author-card-bio">Sarah is a technology and culture writer based in San Francisco.
-                        She explores the intersection of emerging technology and creative expression, with a
-                        focus on how digital tools are reshaping artistic practice.</p>
-                    <div class="author-card-social">
-                        <a href="#">Twitter</a>
-                        <a href="#">LinkedIn</a>
-                        <a href="#">Website</a>
-                    </div>
+                    <h3 class="author-card-name">{{ $post->author->display_name ?? $post->author->name ?? 'Author' }}
+                    </h3>
+                    <p class="author-card-bio">{{ strip_tags($post->author->bio) }}</p>
                 </div>
             </div>
 
