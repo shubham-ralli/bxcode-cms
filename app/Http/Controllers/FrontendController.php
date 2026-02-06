@@ -92,6 +92,50 @@ class FrontendController extends Controller
         ]);
     }
 
+    public function search(Request $request)
+    {
+        if (function_exists('load_theme_functions')) {
+            load_theme_functions();
+        }
+
+        $query = $request->input('s');
+
+        // Basic Search Implementation
+        $posts = Post::when(Schema::hasTable('seo_meta'), fn($q) => $q->with('seo'))
+            ->where('status', 'publish')
+            ->where(function ($q) use ($query) {
+                $q->where('title', 'like', "%{$query}%")
+                    ->orWhere('content', 'like', "%{$query}%");
+            })
+            ->orderBy('created_at', 'desc')
+            ->paginate(Setting::get('posts_per_page', 10));
+
+        $this->secureSeo($posts);
+
+        $theme = get_active_theme();
+
+        $view = "themes.{$theme}.search";
+        if (!view()->exists($view)) {
+            // Fallback to archive
+            $view = "themes.{$theme}.archive";
+            if (!view()->exists($view)) {
+                $view = "themes.{$theme}.index";
+            }
+        }
+
+        View::share('currentTemplate', $view);
+        View::share('searchQuery', $query);
+
+        // WP-style global $s
+        // view()->share('s', $query);
+
+        return view($view, [
+            'posts' => $posts,
+            'searchQuery' => $query,
+            'archiveTitle' => 'Search Results for: ' . $query
+        ]);
+    }
+
     public function handle($slug = null)
     {
         if (function_exists('load_theme_functions')) {

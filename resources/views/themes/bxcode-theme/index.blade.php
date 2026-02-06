@@ -10,6 +10,8 @@
 <main class="container mx-auto px-4 py-8">
     <article class="prose lg:prose-xl mx-auto">
         {!! $content !!}
+
+        {!! get_search_form(false) !!}
     </article>
 </main>
 

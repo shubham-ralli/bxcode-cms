@@ -476,3 +476,36 @@ add_action('bx_footer', function () {
     }
 }, 20);
 */
+
+if (!function_exists('get_search_form')) {
+    /**
+     * Display search form.
+     * Looks for searchform.blade.php in theme, otherwise defaults.
+     */
+    function get_search_form($echo = true)
+    {
+        $theme = get_active_theme();
+        $view = "themes.{$theme}.searchform";
+
+        if (View::exists($view)) {
+            $form = View::make($view)->render();
+        } else {
+            // Default HTML5 Search Form
+            $action = Route::has('frontend.search') ? route('frontend.search') : url('/search');
+
+            $form = '<form role="search" method="get" class="search-form" action="' . $action . '">
+                <label>
+                    <span class="screen-reader-text">Search for:</span>
+                    <input type="search" class="search-field" placeholder="Search &hellip;" value="' . request()->get('s') . '" name="s" />
+                </label>
+                <input type="submit" class="search-submit" value="Search" />
+            </form>';
+        }
+
+        if ($echo) {
+            echo $form;
+        } else {
+            return $form;
+        }
+    }
+}

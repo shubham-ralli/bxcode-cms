@@ -135,6 +135,7 @@ Route::get('/themes/{theme}/{file}', function ($theme, $file) {
 
 
 
+Route::get('/search', [App\Http\Controllers\FrontendController::class, 'search'])->name('frontend.search');
 Route::get('/{slug?}', [App\Http\Controllers\FrontendController::class, 'handle'])->where('slug', '.*')->name('frontend.page');
 
 
