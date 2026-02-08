@@ -12,15 +12,15 @@ if (!plugin_is_active('ACF')) {
 add_admin_menu(
     'ACF',
     'acf',
-    url('lp-admin/acf'),
+    url(get_admin_prefix() . '/acf'),
     '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 0 01.707.293l5.414 5.414a1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>',
     100
 );
 
 // Add submenus
-add_admin_submenu('acf', 'Field Groups', url('lp-admin/acf/field-groups'), 10);
-add_admin_submenu('acf', 'Post Types', url('lp-admin/acf/post-types'), 20);
-add_admin_submenu('acf', 'Taxonomies', url('lp-admin/acf/taxonomies'), 30);
+add_admin_submenu('acf', 'Field Groups', url(get_admin_prefix() . '/acf/field-groups'), 10);
+add_admin_submenu('acf', 'Post Types', url(get_admin_prefix() . '/acf/post-types'), 20);
+add_admin_submenu('acf', 'Taxonomies', url(get_admin_prefix() . '/acf/taxonomies'), 30);
 
 // Register Custom Post Types in Admin Menu
 try {
@@ -62,14 +62,14 @@ try {
             add_admin_menu(
                 $menuName,
                 $type->key,
-                url('lp-admin/posts') . '?type=' . $type->key,
+                url(get_admin_prefix() . '/posts') . '?type=' . $type->key,
                 $icon,
                 25
             );
 
             // Add Submenus
-            add_admin_submenu($type->key, $allItems, url('lp-admin/posts') . '?type=' . $type->key, 10);
-            add_admin_submenu($type->key, $addNew, url('lp-admin/posts/create') . '?type=' . $type->key, 20);
+            add_admin_submenu($type->key, $allItems, url(get_admin_prefix() . '/posts') . '?type=' . $type->key, 10);
+            add_admin_submenu($type->key, $addNew, url(get_admin_prefix() . '/posts/create') . '?type=' . $type->key, 20);
 
             // Add Taxonomy Submenus for this CPT
             if (\Illuminate\Support\Facades\Schema::hasTable('custom_taxonomies')) {

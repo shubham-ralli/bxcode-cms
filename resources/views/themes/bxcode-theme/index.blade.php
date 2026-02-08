@@ -11,7 +11,7 @@
     <article class="prose lg:prose-xl mx-auto">
         {!! $content !!}
 
-        {!! get_search_form(false) !!}
+        {!! get_search_form() !!}
     </article>
 </main>
 

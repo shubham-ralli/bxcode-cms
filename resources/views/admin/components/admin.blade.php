@@ -1150,7 +1150,7 @@
 
                                                     // Send Update Request
                                                     const xhr = new XMLHttpRequest();
-                                                    xhr.open('POST', '{{ url("lp-admin/media") }}/' + mediaId);
+                                                    xhr.open('POST', '{{ url(get_admin_prefix() . "/media") }}/' + mediaId);
                                                     xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
 
                                                     // CSRF Token

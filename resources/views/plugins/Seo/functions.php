@@ -11,17 +11,17 @@ if (!plugin_is_active('Seo')) {
 add_admin_menu(
     'SEO Manager',      // Label
     'seo',              // Slug
-    url('lp-admin/seo'),// URL
+    url(get_admin_prefix() . '/seo'),// URL
     '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>',
     90                  // Order
 );
 
 
 // Add Settings Submenu
-add_admin_submenu('seo', 'Settings', url('lp-admin/seo/settings'), 10);
+add_admin_submenu('seo', 'Settings', url(get_admin_prefix() . '/seo/settings'), 10);
 
 // Add Tools Submenu
-add_admin_submenu('seo', 'Tools', url('lp-admin/seo/tools'), 20);
+add_admin_submenu('seo', 'Tools', url(get_admin_prefix() . '/seo/tools'), 20);
 
 // 2. Hook into Post Editor
 // 2. Hook into Post Editor (Meta Box)
@@ -145,7 +145,7 @@ add_action('wp_head', function () {
 // 4. Admin Routes
 // Main SEO route redirects to settings
 add_plugin_admin_route('seo', function () {
-    return redirect(url('lp-admin/seo/settings'));
+    return redirect(url(get_admin_prefix() . '/seo/settings'));
 });
 
 // Tools route (robots.txt & sitemap)
