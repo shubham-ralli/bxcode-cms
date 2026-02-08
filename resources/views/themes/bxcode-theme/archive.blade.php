@@ -22,7 +22,7 @@
                         @if($post->categories->isNotEmpty())
                             <span class="category">{{ $post->categories->first()->name }}</span>
                         @endif
-                        <span class="date">{{ $post->created_at->format('F d, Y') }}</span>
+                        <span class="date">{{ $post->published_at ? $post->published_at->format('F d, Y') : $post->created_at->format('F d, Y') }}</span>
                         <span class="read-time">{{ $post->read_time }}</span>
                     </div>
                     <h3 class="list-post-title">

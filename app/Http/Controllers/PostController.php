@@ -129,6 +129,7 @@ class PostController extends Controller
             'excerpt' => 'nullable',
             'tags' => 'nullable|array',
             'categories' => 'nullable|array',
+            'published_at' => 'nullable|date',
         ]);
 
         $uniqueSlug = $this->generateUniqueSlug(
@@ -138,17 +139,27 @@ class PostController extends Controller
             $request->input('parent_id')
         );
 
+
+        // Auto-detect scheduled status based on publish date
+        $status = $request->input('status');
+        $publishedAt = $request->input('published_at');
+
+        if ($publishedAt && \Carbon\Carbon::parse($publishedAt)->isFuture() && in_array($status, ['publish', 'scheduled'])) {
+            $status = 'scheduled';
+        }
+
         $post = Post::create([
             'title' => $request->input('title'),
             'slug' => $uniqueSlug,
             'content' => $request->input('content'),
             'type' => $request->input('type'),
-            'status' => $request->input('status'),
+            'status' => $status,
             'template' => $request->input('template') ?: 'default',
             'parent_id' => $request->input('parent_id'),
             'author_id' => Auth::id(),
             'featured_image' => $request->input('featured_image') ?? null,
             'excerpt' => $request->input('excerpt'),
+            'published_at' => $publishedAt,
         ]);
 
         $this->syncTagsByName($post, $request->input('tags', []), 'post_tag');
@@ -231,6 +242,7 @@ class PostController extends Controller
             'excerpt' => 'nullable',
             'tags' => 'nullable|array',
             'categories' => 'nullable|array',
+            'published_at' => 'nullable|date',
         ]);
 
         $uniqueSlug = $this->generateUniqueSlug(
@@ -240,16 +252,26 @@ class PostController extends Controller
             $request->input('parent_id')
         );
 
+
+        // Auto-detect scheduled status based on publish date
+        $status = $request->input('status');
+        $publishedAt = $request->input('published_at');
+
+        if ($publishedAt && \Carbon\Carbon::parse($publishedAt)->isFuture() && in_array($status, ['publish', 'scheduled'])) {
+            $status = 'scheduled';
+        }
+
         $post->update([
             'title' => $request->input('title'),
             'slug' => $uniqueSlug,
             'content' => $request->input('content'),
             'type' => $request->input('type'),
-            'status' => $request->input('status'),
+            'status' => $status,
             'template' => $request->input('template') ?: 'default',
             'parent_id' => $request->input('parent_id'),
             'featured_image' => $request->input('featured_image'),
             'excerpt' => $request->input('excerpt'),
+            'published_at' => $publishedAt,
         ]);
 
         $this->syncTagsByName($post, $request->input('tags', []), 'post_tag');

@@ -4,10 +4,23 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Scopes\PublishedScope;
 
 class Post extends Model
 {
-    protected $fillable = ['title', 'slug', 'content', 'type', 'status', 'template', 'author_id', 'featured_image', 'parent_id', 'excerpt'];
+    protected $fillable = ['title', 'slug', 'content', 'type', 'status', 'template', 'author_id', 'featured_image', 'parent_id', 'excerpt', 'published_at'];
+
+    protected $casts = [
+        'published_at' => 'datetime',
+    ];
+
+    /**
+     * The "booted" method of the model.
+     */
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new PublishedScope);
+    }
 
     public function parent()
     {

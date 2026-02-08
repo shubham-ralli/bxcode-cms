@@ -7,7 +7,9 @@
         <div class="container-narrow">
             <div class="article-meta">
                 <a href="list.html?category=technology" class="article-category">Technology</a>
-                <span class="article-date">{{ $post->created_at->format('F d, Y') }} </span>
+                <span
+                    class="article-date">{{ $post->published_at ? $post->published_at->format('F d, Y') : $post->created_at->format('F d, Y') }}
+                </span>
                 <span class="article-read-time">8 min read</span>
             </div>
             <h1 class="article-title">{{ $post->title }}</h1>

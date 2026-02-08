@@ -21,6 +21,8 @@
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"
         integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.2/tinymce.min.js" referrerpolicy="origin"></script>
 
@@ -1038,6 +1040,22 @@
                     editorId: config.editorId,
                     fieldName: config.fieldName,
 
+                    switchMode(newMode) {
+                        if (newMode === this.mode) return;
+
+                        if (newMode === 'code') {
+                            if (this.editor) {
+                                this.content = this.editor.getContent();
+                            }
+                        } else {
+                            // Switching to Visual
+                            if (this.editor) {
+                                this.editor.setContent(this.content);
+                            }
+                        }
+                        this.mode = newMode;
+                    },
+
                     init() {
                         this.$nextTick(() => {
                             const textarea = document.getElementById(this.editorId);
@@ -1046,6 +1064,13 @@
                             }
                             this.initTinyMCE();
                         });
+                    },
+
+                    updateVisualFromRaw() {
+                        const rawContent = this.$refs.rawArea.value;
+                        if (this.editor) {
+                            this.editor.setContent(rawContent);
+                        }
                     },
 
                     initTinyMCE() {
@@ -1060,8 +1085,9 @@
                             }
                             tinymce.init({
                                 selector: '#' + self.editorId,
-                                min_height: 200,
-                                resize: true,
+                                height: '100%', // Fill the container
+                                min_height: 400,
+                                resize: false, // Let container handle it
                                 menubar: false,
                                 statusbar: false,
                                 images_upload_handler: (blobInfo, progress) => new Promise((resolve, reject) => {
@@ -1123,14 +1149,77 @@
                                 convert_urls: true,
                                 image_title: true,
                                 promotion: false,
-                                plugins: 'preview importcss searchreplace autolink autosave save directionality code visualblocks visualchars fullscreen image link media template codesample table charmap pagebreak nonbreaking anchor insertdatetime advlist lists wordcount help charmap quickbars emoticons',
-                                toolbar: 'blocks | bold italic underline strikethrough | alignleft aligncenter alignright |  numlist bullist | insertfile image media link',
-                                content_style: 'body { font-family:Inter,Helvetica,Arial,sans-serif; font-size:16px; line-height:1.6; color: #374151; max-width: 800px; margin: 0 auto; padding: 20px; } img { max-width: 100%; height: auto; }',
+                                plugins: 'preview importcss searchreplace autolink autosave save directionality code visualblocks visualchars fullscreen image link media template codesample table charmap pagebreak nonbreaking anchor insertdatetime advlist lists wordcount help charmap emoticons',
+                                toolbar: 'blocks | bold italic underline strikethrough | alignleft aligncenter alignright |  numlist bullist | insertfile image media link | removeformat',
+                                contextmenu: 'link image table',
+                                content_style: 'body { font-family:Inter,Helvetica,Arial,sans-serif; font-size:16px; line-height:1.6; color: #374151; max-width: 800px; margin: 0 auto; padding: 20px; } img { max-width: 100%; height: auto; } .bx-note-info { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 1rem; margin-bottom: 1rem; color: #1e40af; } .bx-note-warning { background: #fefce8; border-left: 4px solid #eab308; padding: 1rem; margin-bottom: 1rem; color: #854d0e; } .bx-note-error { background: #fef2f2; border-left: 4px solid #ef4444; padding: 1rem; margin-bottom: 1rem; color: #991b1b; }',
                                 setup: function (editor) {
                                     self.editor = editor;
+
+                                    // Slash Commands Autocompleter
+                                    editor.ui.registry.addAutocompleter('slashcommands', {
+                                        ch: '/',
+                                        minChars: 0,
+                                        columns: 1,
+                                        fetch: function (pattern) {
+                                            const query = pattern ? pattern.toLowerCase() : '';
+                                            const matchedItems = [
+                                                { type: 'autocompleteitem', value: 'h1', text: 'H1 Heading 1', icon: 'header' },
+                                                { type: 'autocompleteitem', value: 'h2', text: 'H2 Heading 2', icon: 'header' },
+                                                { type: 'autocompleteitem', value: 'h3', text: 'H3 Heading 3', icon: 'header' },
+                                                { type: 'autocompleteitem', value: 'image', text: 'Image', icon: 'image' },
+                                                { type: 'autocompleteitem', value: 'blockquote', text: 'Quote', icon: 'quote' },
+                                                { type: 'autocompleteitem', value: 'bullist', text: 'Bulleted List', icon: 'unordered-list' },
+                                                { type: 'autocompleteitem', value: 'numlist', text: 'Numbered List', icon: 'ordered-list' },
+                                                { type: 'autocompleteitem', value: 'code', text: 'Code Block', icon: 'code-sample' },
+                                                { type: 'autocompleteitem', value: 'note_info', text: 'Info Note', icon: 'info' },
+                                                { type: 'autocompleteitem', value: 'note_warning', text: 'Warning Note', icon: 'warning' },
+                                                { type: 'autocompleteitem', value: 'note_error', text: 'Error Note', icon: 'remove' },
+                                                { type: 'autocompleteitem', value: 'hr', text: 'Divider', icon: 'horizontal-rule' }
+                                            ].filter(function (item) {
+                                                return item.text.toLowerCase().indexOf(query) !== -1;
+                                            }).slice(0, 3);
+
+                                            return new Promise(function (resolve) {
+                                                resolve(matchedItems);
+                                            });
+                                        },
+                                        onAction: function (autocompleteApi, rng, value) {
+                                            editor.selection.setRng(rng);
+                                            editor.insertContent('');
+
+                                            switch (value) {
+                                                case 'h1': editor.execCommand('FormatBlock', false, 'h1'); break;
+                                                case 'h2': editor.execCommand('FormatBlock', false, 'h2'); break;
+                                                case 'h3': editor.execCommand('FormatBlock', false, 'h3'); break;
+                                                case 'image': editor.execCommand('mceImage'); break;
+                                                case 'blockquote': editor.execCommand('FormatBlock', false, 'blockquote'); break;
+                                                case 'bullist': editor.execCommand('InsertUnorderedList'); break;
+                                                case 'numlist': editor.execCommand('InsertOrderedList'); break;
+                                                case 'code': editor.execCommand('codesample'); break;
+                                                case 'hr': editor.execCommand('InsertHorizontalRule'); break;
+                                                case 'note_info':
+                                                    editor.insertContent('<div class="bx-note-info"><p><strong>Info:</strong> Write your note here...</p></div><p>&nbsp;</p>');
+                                                    break;
+                                                case 'note_warning':
+                                                    editor.insertContent('<div class="bx-note-warning"><p><strong>Warning:</strong> Watch out for this...</p></div><p>&nbsp;</p>');
+                                                    break;
+                                                case 'note_error':
+                                                    editor.insertContent('<div class="bx-note-error"><p><strong>Error:</strong> Something went wrong...</p></div><p>&nbsp;</p>');
+                                                    break;
+                                            }
+                                        }
+                                    });
+
                                     editor.on('Change KeyUp', function () {
                                         self.content = editor.getContent();
                                         editor.save();
+                                    });
+                                    // Sync back from raw when switching modes or blurring
+                                    editor.on('focus', function () {
+                                        if (self.mode === 'visual' && self.$refs.rawArea) {
+                                            // self.editor.setContent(self.$refs.rawArea.value);
+                                        }
                                     });
                                     editor.on('change', function () {
                                         editor.save();

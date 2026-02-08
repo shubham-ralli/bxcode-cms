@@ -121,6 +121,115 @@
                     <input type="hidden" name="title" value="{{ $post->title ?? 'Untitled ' . now()->toDateTimeString() }}">
                 @endif
 
+                <!-- Permalink (Editable Slug) -->
+                <div class="bg-white rounded-lg shadow-sm p-6" x-data="{
+                            slug: '{{ old('slug', $post->slug) }}',
+                            editing: false,
+                            parentSlug: '{{ $post->parent ? $post->parent->slug : '' }}',
+                            postType: '{{ $post->type }}',
+                            baseUrl: '{{ url('/') }}',
+                            get urlPrefix() {
+                                // For pages with parent
+                                if (this.postType === 'page' && this.parentSlug) {
+                                    return this.baseUrl + '/' + this.parentSlug + '/';
+                                }
+                                
+                                // For regular posts and pages (no prefix)
+                                if (this.postType === 'post' || this.postType === 'page') {
+                                    return this.baseUrl + '/';
+                                }
+                                
+                                // For custom post types
+                                @if(isset($postTypeObj) && $postTypeObj && property_exists($postTypeObj, 'slug'))
+                                    return this.baseUrl + '/{{ $postTypeObj->slug }}/';
+                                @else
+                                    return this.baseUrl + '/';
+                                @endif
+                            },
+                            startEdit() {
+                                this.editing = true;
+                                this.$nextTick(() => this.$refs.slugEdit.focus());
+                            },
+                            finishEdit() {
+                                this.editing = false;
+                            },
+                            init() {
+                                this.$nextTick(() => {
+                                        const seoInput = document.querySelector('.seo-slug-input');
+                                        if(seoInput) {
+                                            seoInput.addEventListener('input', (e) => {
+                                                this.slug = e.target.value;
+                                            });
+                                            if(seoInput.value !== this.slug) {
+                                                seoInput.value = this.slug;
+                                            }
+                                        }
+                                });
+
+                                this.$watch('slug', (val) => {
+                                        const seoInput = document.querySelector('.seo-slug-input');
+                                        if(seoInput) {
+                                            seoInput.value = val;
+                                            seoInput.dispatchEvent(new Event('input'));
+                                        }
+                                });
+                                
+                                window.updateUrlPreviewParent = (parentSlug) => {
+                                    this.parentSlug = parentSlug;
+                                };
+                            }
+                        }">
+                        <label class="block text-sm font-medium text-gray-700 mb-3">Permalink</label>
+                        
+                        <!-- Hidden input for form submission -->
+                        <input type="hidden" name="slug" id="slugInput" x-model="slug">
+                        
+                        <!-- Editable Permalink Display -->
+                        <div class="flex items-center gap-1 p-3 bg-gray-50 rounded-md border border-gray-200 font-mono text-sm">
+                            <!-- URL Prefix (non-editable) -->
+                            <span class="text-gray-500" x-text="urlPrefix"></span>
+                            
+                            <!-- Editable Slug Portion -->
+                            <div class="flex-1 min-w-0" @click.away="finishEdit()">
+                                <input 
+                                    x-show="editing"
+                                    x-ref="slugEdit"
+                                    type="text" 
+                                    x-model="slug"
+                                    @keydown.enter="finishEdit()"
+                                    @keydown.escape="finishEdit()"
+                                    class="w-full px-2 py-1 text-indigo-600 font-medium bg-white border border-indigo-300 rounded focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                    placeholder="post-slug">
+                                
+                                <button 
+                                    x-show="!editing"
+                                    type="button"
+                                    @click="startEdit()"
+                                    class="text-indigo-600 font-medium hover:text-indigo-800 underline decoration-dotted underline-offset-2 break-all text-left">
+                                    <span x-text="slug || 'edit-slug'"></span>
+                                </button>
+                            </div>
+                            
+                            <!-- Edit Button -->
+                            <button 
+                                x-show="!editing"
+                                type="button"
+                                @click="startEdit()"
+                                class="flex-shrink-0 text-gray-400 hover:text-indigo-600 transition-colors"
+                                title="Edit slug">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <p class="mt-2 text-xs text-gray-500">Click the slug to edit it</p>
+                    </div>
+
+
+
+
+
                 <!-- Editor -->
                 @if(supports_meta_box($post->type, 'editor'))
                 <div class="h-[600px] mb-8 content-editor" id="content-editor">
@@ -137,6 +246,9 @@
                         placeholder="Write a short summary...">{{ old('excerpt', $post->excerpt) }}</textarea>
                 </div>
                 @endif
+
+
+                
 
                 <!-- Plugin Hook -->
                 @php 
@@ -163,54 +275,52 @@
                             </svg>
                         </button>
                     </div>
-                    <div x-show="open" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 transform scale-95" x-transition:enter-end="opacity-100 transform scale-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 transform scale-100" x-transition:leave-end="opacity-0 transform scale-95" class="p-4 space-y-4">
-                        <div class="flex items-center justify-between text-sm">
-                            <label class="text-gray-600">Status:</label>
-                            <select name="status"
-                                class="text-sm border-none bg-gray-50 rounded focus:ring-0 font-medium text-gray-700 cursor-pointer">
-                                <option value="publish" {{ old('status', $post->status) == 'publish' ? 'selected' : '' }}>Public</option>
-                                <option value="private" {{ old('status', $post->status) == 'private' ? 'selected' : '' }}>Private</option>
-                                <option value="draft" {{ old('status', $post->status) == 'draft' ? 'selected' : '' }}>Draft</option>
-                            </select>
+                    <div x-show="open" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 transform scale-95" x-transition:enter-end="opacity-100 transform scale-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 transform scale-100" x-transition:leave-end="opacity-0 transform scale-95" class="p-4 space-y-4" x-data="{
+                        publishDate: '{{ old('published_at', $post->published_at ? $post->published_at->format('Y-m-d H:i') : '') }}',
+                        status: '{{ old('status', $post->status) }}',
+                        get isScheduled() {
+                            if (!this.publishDate) return false;
+                            const pubDate = new Date(this.publishDate);
+                            const now = new Date();
+                            return pubDate > now && (this.status === 'publish' || this.status === 'scheduled');
+                        },
+                        get displayStatus() {
+                            return this.isScheduled ? 'scheduled' : this.status;
+                        },
+                        init() {
+                            // Watch for date changes
+                            this.$watch('publishDate', () => {
+                                // Update status display when date changes
+                            });
+                        }
+                    }">
+                        <div class="flex items-center justify-between text-sm py-1">
+                            <label class="text-gray-600 font-medium">Status:</label>
+                            
+                            <!-- Show badge for scheduled posts -->
+                            <div class="flex items-center gap-2">
+                                <span x-show="isScheduled" class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    Scheduled
+                                </span>
+                                
+                                <select name="status" x-model="status" x-show="!isScheduled"
+                                    class="text-sm border-none bg-gray-50 rounded focus:ring-0 font-medium text-gray-700 cursor-pointer">
+                                    <option value="publish">Public</option>
+                                    <option value="private">Private</option>
+                                    <option value="draft">Draft</option>
+                                </select>
+                            </div>
                         </div>
 
 
 
-<div class="flex items-center justify-between text-sm" x-data="{
-                            slug: '{{ old('slug', $post->slug) }}',
-                            init() {
-                                this.$nextTick(() => {
-                                        const seoInput = document.querySelector('.seo-slug-input');
-                                        if(seoInput) {
-                                            seoInput.addEventListener('input', (e) => {
-                                                this.slug = e.target.value;
-                                            });
-                                            // Initial Sync
-                                            if(seoInput.value !== this.slug) {
-                                                seoInput.value = this.slug;
-                                            }
-                                        }
-                                });
 
-                                this.$watch('slug', (val) => {
-                                        const seoInput = document.querySelector('.seo-slug-input');
-                                        if(seoInput) {
-                                            seoInput.value = val;
-                                            seoInput.dispatchEvent(new Event('input'));
-                                        }
-                                });
-                            }
-                        }">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Slug</label>
-                        <div class="flex rounded-md shadow-sm">
-                            <input type="text" name="slug" id="slugInput" x-model="slug"
-                                class="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-r-md border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                placeholder="url-slug">
-                        </div>
-                    </div>
 
-                        <div class="flex items-center justify-between text-sm">
-                            <label class="text-gray-600">Author:</label>
+                        <div class="flex items-center justify-between text-sm py-1">
+                            <label class="text-gray-600 font-medium">Author:</label>
                             <div class="relative min-w-[150px]" id="authorSelectContainer">
                                 @php
                                     $defaultAuthor = $post->author ?? (Auth::user() ?? \App\Models\User::where('role', 'admin')->first());
@@ -239,57 +349,64 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="flex items-center justify-between text-sm" x-data="{ 
-                                                    showDatePicker: false, 
-                                                    scheduledDate: '{{ old('published_at', $post->published_at ? $post->published_at->format('Y-m-d\TH:i') : '') }}',
-                                                    get isScheduled() {
-                                                        if (!this.scheduledDate) return false;
-                                                        const selectedDate = new Date(this.scheduledDate);
-                                                        const now = new Date();
-                                                        return selectedDate > now;
-                                                    },
-                                                    get displayText() {
-                                                        if (!this.scheduledDate) return 'Immediately';
-                                                        return this.isScheduled ? 'Scheduled' : 'Immediately';
-                                                    }
-                                                }">
-                            <label class="text-gray-600">Visibility:</label>
-                            <div class="relative">
-                                <button type="button" @click="showDatePicker = !showDatePicker"
-                                    class="text-sm border-none bg-gray-50 rounded px-2 py-1 font-medium text-gray-700 cursor-pointer hover:bg-gray-100">
-                                    <span x-text="displayText"></span>
-                                </button>
+                        <div class="flex items-center justify-between text-sm" x-data="{
+                            date: '{{ old('published_at', $post->published_at ? $post->published_at->format('Y-m-d H:i') : '') }}',
+                            init() {
+                                flatpickr(this.$refs.picker, {
+                                    enableTime: true,
+                                    dateFormat: 'Y-m-d H:i',
+                                    altInput: true,
+                                    altFormat: 'F j, Y at h:i K',
+                                    defaultDate: this.date,
+                                    time_24hr: false,
+                                    onReady: (selectedDates, dateStr, instance) => {
+                                        // Robust check to avoid duplicates or errors (e.g. re-renders)
+                                        if (instance.calendarContainer.querySelector('.flatpickr-now-button-container')) {
+                                            return;
+                                        }
 
-                                <div x-show="showDatePicker" @click.away="showDatePicker = false"
-                                    class="absolute right-0 z-10 mt-2 w-64 bg-white border border-gray-200 rounded-md shadow-lg p-4"
-                                    style="display: none;">
-                                    <div class="space-y-3">
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-2">Publish Date &
-                                                Time</label>
-                                            <input type="datetime-local" x-model="scheduledDate" name="published_at"
-                                                class="w-full text-sm border-gray-300 rounded-md">
-                                            <p class="text-xs text-gray-500 mt-2">
-                                                <span x-show="!scheduledDate">Select a date to schedule</span>
-                                                <span x-show="scheduledDate && !isScheduled" class="text-green-600">✓
-                                                    Will publish immediately</span>
-                                                <span x-show="scheduledDate && isScheduled" class="text-blue-600">📅
-                                                    Scheduled for future</span>
-                                            </p>
-                                        </div>
-                                        <div class="flex gap-2">
-                                            <button type="button" @click="scheduledDate = ''; showDatePicker = false"
-                                                class="flex-1 px-3 py-1.5 text-xs border border-gray-300 rounded hover:bg-gray-50">
-                                                Clear
-                                            </button>
-                                            <button type="button" @click="showDatePicker = false"
-                                                class="flex-1 px-3 py-1.5 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700">
-                                                Done
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
+                                        const container = instance.calendarContainer;
+                                        const wrapper = document.createElement('div');
+                                        wrapper.className = 'flatpickr-now-button-container p-2 border-t border-gray-200 flex justify-center';
+                                        
+                                        const nowBtn = document.createElement('button');
+                                        nowBtn.type = 'button';
+                                        nowBtn.className = 'text-xs bg-indigo-50 text-indigo-600 px-3 py-1 rounded hover:bg-indigo-100 font-medium w-full transition-colors';
+                                        nowBtn.textContent = 'Set to Current Time';
+                                        nowBtn.addEventListener('click', () => {
+                                            const now = new Date();
+                                            instance.setDate(now, true);
+                                            this.date = instance.input.value;
+                                            // instance.close(); // Optional, user might want to adjust time further
+                                        });
+
+                                        wrapper.appendChild(nowBtn);
+                                        container.appendChild(wrapper);
+                                    },
+                                    onChange: (selectedDates, dateStr) => {
+                                        this.date = dateStr;
+                                        // Notify parent Alpine component of date change
+                                        this.$dispatch('date-changed', { date: dateStr });
+                                    }
+                                });
+                            }
+                        }">
+                        <div class="flex items-center justify-between text-sm py-1" @date-changed.window="publishDate = $event.detail.date">
+                            <label class="text-gray-600 font-medium">Publish Date:</label>
+                            
+                            {{-- Input --}}
+                            <div class="relative max-w-[180px]">
+                                <input x-ref="picker" type="text" name="published_at" value="{{ old('published_at', $post->published_at ? $post->published_at->format('Y-m-d H:i') : '') }}"
+                                    class="w-full text-right text-sm border-none bg-gray-50 hover:bg-gray-100 transition-colors rounded focus:ring-0 font-medium text-gray-700 cursor-pointer placeholder-gray-500"
+                                    placeholder="Immediately">
+                                <button type="button" class="absolute right-0 top-1/2 -translate-y-1/2 -mr-5 text-gray-400 hover:text-red-500 transition-colors"
+                                    x-show="date"
+                                    @click.stop="$refs.picker._flatpickr.clear(); date = ''"
+                                    title="Clear date (Publish Immediately)">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                </button>
                             </div>
+                        </div>
                         </div>
                         @if($post->exists && $post->status !== 'trash')
                             <div class="text-right pt-2">
@@ -626,6 +743,11 @@
         document.getElementById('parentId').value = id;
         document.getElementById('parentSearch').value = title;
         document.getElementById('parentDropdown').classList.add('hidden');
+
+        // Update URL Preview with parent slug
+        if (window.updateUrlPreviewParent) {
+            window.updateUrlPreviewParent(slug);
+        }
 
         // SEO Plugin Hook (Update URL Prefix)
         if (document.getElementById('urlParentPrefix')) {
