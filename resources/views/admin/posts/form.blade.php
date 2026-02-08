@@ -122,7 +122,7 @@
                 @endif
 
                 <!-- Permalink (Editable Slug) -->
-                <div class="bg-white rounded-lg shadow-sm p-6" x-data="{
+                <div class="" x-data="{
                             slug: '{{ old('slug', $post->slug) }}',
                             editing: false,
                             parentSlug: '{{ $post->parent ? $post->parent->slug : '' }}',

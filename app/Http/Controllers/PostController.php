@@ -384,8 +384,21 @@ class PostController extends Controller
         $type = $post->type;
 
         if ($post->status !== 'trash') {
-            // Move to trash
-            $post->update(['status' => 'trash']);
+            // Move to trash - add __trash suffix to slug
+            $slug = $post->slug;
+            $trashSlug = $slug . '__trash';
+
+            // Check for duplicates and add number if needed
+            $counter = 1;
+            while (Post::where('slug', $trashSlug)->where('id', '!=', $id)->exists()) {
+                $trashSlug = $slug . '__trash_' . $counter;
+                $counter++;
+            }
+
+            $post->update([
+                'status' => 'trash',
+                'slug' => $trashSlug
+            ]);
             $message = 'moved to trash';
         } else {
             // Permanently delete
@@ -399,7 +412,19 @@ class PostController extends Controller
     public function restore($id)
     {
         $post = Post::findOrFail($id);
-        $post->update(['status' => 'draft']); // Restore as draft for safety
+
+        // Remove __trash suffix from slug
+        $slug = $post->slug;
+        if (str_ends_with($slug, '__trash')) {
+            $slug = substr($slug, 0, -7); // Remove '__trash'
+        } elseif (preg_match('/(.+)__trash_(\d+)$/', $slug, $matches)) {
+            $slug = $matches[1]; // Remove '__trash_N'
+        }
+
+        $post->update([
+            'status' => 'draft',
+            'slug' => $slug
+        ]);
 
         return redirect()->route('admin.posts.index', ['type' => $post->type, 'status' => 'trash'])->with('success', 'Post restored from trash');
     }
@@ -418,9 +443,46 @@ class PostController extends Controller
 
         // Perform actions
         if ($action === 'trash') {
-            $count = Post::whereIn('id', $ids)->where('status', '!=', 'trash')->update(['status' => 'trash']);
+            foreach ($ids as $id) {
+                $post = Post::find($id);
+                if ($post && $post->status !== 'trash') {
+                    // Add __trash suffix to slug
+                    $slug = $post->slug;
+                    $trashSlug = $slug . '__trash';
+
+                    // Check for duplicates and add number if needed
+                    $counter = 1;
+                    while (Post::where('slug', $trashSlug)->where('id', '!=', $id)->exists()) {
+                        $trashSlug = $slug . '__trash_' . $counter;
+                        $counter++;
+                    }
+
+                    $post->update([
+                        'status' => 'trash',
+                        'slug' => $trashSlug
+                    ]);
+                    $count++;
+                }
+            }
         } elseif ($action === 'restore') {
-            $count = Post::whereIn('id', $ids)->where('status', 'trash')->update(['status' => 'draft']);
+            foreach ($ids as $id) {
+                $post = Post::find($id);
+                if ($post && $post->status === 'trash') {
+                    // Remove __trash suffix
+                    $slug = $post->slug;
+                    if (str_ends_with($slug, '__trash')) {
+                        $slug = substr($slug, 0, -7);
+                    } elseif (preg_match('/(.+)__trash_(\d+)$/', $slug, $matches)) {
+                        $slug = $matches[1];
+                    }
+
+                    $post->update([
+                        'status' => 'draft',
+                        'slug' => $slug
+                    ]);
+                    $count++;
+                }
+            }
         } elseif ($action === 'delete') {
             $count = Post::whereIn('id', $ids)->delete();
         } elseif ($action === 'draft') {
