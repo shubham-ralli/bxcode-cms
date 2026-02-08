@@ -492,3 +492,19 @@ add_plugin_admin_route('acf/taxonomies/{id}', [TaxonomyController::class, 'updat
 add_plugin_admin_route('acf/taxonomies/{id}', [TaxonomyController::class, 'destroy'], 'admin.acf.taxonomies.destroy', ['DELETE']);
 add_plugin_admin_route('acf/taxonomies/action/bulk', [TaxonomyController::class, 'bulkDestroy'], 'admin.acf.taxonomies.bulk', ['POST']);
 add_plugin_admin_route('acf/taxonomies/{id}/toggle', [TaxonomyController::class, 'toggleStatus'], 'admin.acf.taxonomies.toggle', ['POST']);
+
+// Dashboard Widget
+add_action('admin_dashboard_widgets', function() {
+    $groupCount = \Plugins\ACF\src\Models\FieldGroup::count();
+    
+    echo '<div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow">';
+    echo '    <div class="flex items-center justify-between mb-4">';
+    echo '        <h3 class="text-lg font-semibold text-gray-700">ACF Field Groups</h3>';
+    echo '        <span class="p-2 bg-yellow-50 text-yellow-600 rounded-full">';
+    echo '            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>';
+    echo '        </span>';
+    echo '    </div>';
+    echo '    <p class="text-3xl font-bold text-gray-800 mb-2">' . $groupCount . '</p>';
+    echo '    <a href="' . url(get_admin_prefix() . '/acf/field-groups') . '" class="text-sm font-medium text-blue-600 hover:text-blue-800">Manage Field Groups &rarr;</a>';
+    echo '</div>';
+});
